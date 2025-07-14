@@ -608,12 +608,12 @@ export default function ProjectDetail({ params }: { params: any }) {
                   <div className="flex items-center mb-5">
                     <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2.5"></div>
                     <h3 className="font-medium text-gray-800">To Do</h3>
-                    <span className="ml-1.5 text-gray-500">{tasks?.filter(task => task.status === "To Do").length || 0}</span>
+                    <span className="ml-1.5 text-gray-500">{tasks?.filter((task: Task) => task.status === "To Do").length || 0}</span>
                   </div>
                   
-                  {tasks?.filter(task => task.status === "To Do").length > 0 ? (
+                  {tasks?.filter((task: Task) => task.status === "To Do").length > 0 ? (
                     <div>
-                      {tasks?.filter(task => task.status === "To Do").map(task => (
+                      {tasks?.filter((task: Task) => task.status === "To Do").map((task: Task) => (
                         <div key={task.id} className="border border-gray-200 rounded-xl mb-4 bg-white overflow-hidden shadow-sm hover:shadow transition-shadow">
                           <div className="h-44 bg-gray-100 relative rounded-t-xl overflow-hidden">
                             {task.file_url ? (
@@ -676,7 +676,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                               <div className="flex space-x-3">
                                 <button
                                   onClick={() => {
-                                    const taskToEdit = tasks?.find(t => t.id === task.id);
+                                    const taskToEdit = tasks?.find((t: Task) => t.id === task.id);
                                     if (taskToEdit) {
                                       setEditTask({
                                         title: taskToEdit.title,
@@ -735,12 +735,12 @@ export default function ProjectDetail({ params }: { params: any }) {
                   <div className="flex items-center mb-5">
                     <div className="w-3 h-3 rounded-full bg-blue-500 mr-2.5"></div>
                     <h3 className="font-medium text-gray-800">In Progress</h3>
-                    <span className="ml-1.5 text-gray-500">{tasks?.filter(task => task.status === "In Progress").length || 0}</span>
+                    <span className="ml-1.5 text-gray-500">{tasks?.filter((task: Task) => task.status === "In Progress").length || 0}</span>
                   </div>
                   
-                  {tasks?.filter(task => task.status === "In Progress").length > 0 ? (
+                  {tasks?.filter((task: Task) => task.status === "In Progress").length > 0 ? (
                     <div>
-                      {tasks?.filter(task => task.status === "In Progress").map(task => (
+                      {tasks?.filter((task: Task) => task.status === "In Progress").map((task: Task) => (
                         <div key={task.id} className="border border-gray-200 rounded-xl mb-4 bg-white overflow-hidden shadow-sm hover:shadow transition-shadow">
                           <div className="h-44 bg-gray-100 relative rounded-t-xl overflow-hidden">
                             {task.file_url ? (
@@ -803,7 +803,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                               <div className="flex space-x-3">
                                 <button
                                   onClick={() => {
-                                    const taskToEdit = tasks?.find(t => t.id === task.id);
+                                    const taskToEdit = tasks?.find((t: Task) => t.id === task.id);
                                     if (taskToEdit) {
                                       setEditTask({
                                         title: taskToEdit.title,
@@ -862,12 +862,12 @@ export default function ProjectDetail({ params }: { params: any }) {
                   <div className="flex items-center mb-5">
                     <div className="w-3 h-3 rounded-full bg-purple-500 mr-2.5"></div>
                     <h3 className="font-medium text-gray-800">Review</h3>
-                    <span className="ml-1.5 text-gray-500">{tasks?.filter(task => task.status === "Review").length || 0}</span>
+                    <span className="ml-1.5 text-gray-500">{tasks?.filter((task: Task) => task.status === "Review").length || 0}</span>
                   </div>
                   
-                  {tasks?.filter(task => task.status === "Review").length > 0 ? (
+                  {tasks?.filter((task: Task) => task.status === "Review").length > 0 ? (
                     <div>
-                      {tasks?.filter(task => task.status === "Review").map(task => (
+                      {tasks?.filter((task: Task) => task.status === "Review").map((task: Task) => (
                         <div key={task.id} className="border border-gray-200 rounded-xl mb-4 bg-white overflow-hidden shadow-sm hover:shadow transition-shadow">
                            <div className="h-44 bg-gray-100 relative rounded-t-xl overflow-hidden">
                             {task.file_url ? (
@@ -930,7 +930,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                               <div className="flex space-x-3">
                                 <button
                                   onClick={() => {
-                                    const taskToEdit = tasks?.find(t => t.id === task.id);
+                                    const taskToEdit = tasks?.find((t: Task) => t.id === task.id);
                                     if (taskToEdit) {
                                       setEditTask({
                                         title: taskToEdit.title,
@@ -989,12 +989,12 @@ export default function ProjectDetail({ params }: { params: any }) {
                   <div className="flex items-center mb-5">
                     <div className="w-3 h-3 rounded-full bg-green-500 mr-2.5"></div>
                     <h3 className="font-medium text-gray-800">Completed</h3>
-                    <span className="ml-1.5 text-gray-500">{tasks?.filter(task => task.status === "Completed").length || 0}</span>
+                    <span className="ml-1.5 text-gray-500">{tasks?.filter((task: Task) => task.status === "Completed").length || 0}</span>
                   </div>
                   
-                  {tasks?.filter(task => task.status === "Completed").length > 0 ? (
+                  {tasks?.filter((task: Task) => task.status === "Completed").length > 0 ? (
                     <div>
-                      {tasks?.filter(task => task.status === "Completed").map(task => (
+                      {tasks?.filter((task: Task) => task.status === "Completed").map((task: Task) => (
                         <div key={task.id} className="border border-gray-200 rounded-xl mb-4 bg-white overflow-hidden shadow-sm hover:shadow transition-shadow">
                            <div className="h-44 bg-gray-100 relative rounded-t-xl overflow-hidden">
                             {task.file_url ? (
@@ -1057,7 +1057,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                               <div className="flex space-x-3">
                                 <button
                                   onClick={() => {
-                                    const taskToEdit = tasks?.find(t => t.id === task.id);
+                                    const taskToEdit = tasks?.find((t: Task) => t.id === task.id);
                                     if (taskToEdit) {
                                       setEditTask({
                                         title: taskToEdit.title,
@@ -1354,7 +1354,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                     Update Attachment
                   </label>
                   {editingTaskId && (() => {
-                    const currentTask = tasks?.find(t => t.id === editingTaskId);
+                    const currentTask = tasks?.find((t: Task) => t.id === editingTaskId);
                     return currentTask?.file_url ? (
                       <div className="text-sm text-gray-600 flex items-center bg-gray-50 p-2 rounded-md">
                         <FiFile className="mr-2 text-gray-500" />
@@ -1458,7 +1458,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                         response.data?.message || "Failed to update task"
                       );
 
-                       const updatedTasks = tasks?.map((t) => {
+                       const updatedTasks = tasks?.map((t: Task) => {
                         if (t.id === editingTaskId) {
                           return {
                             ...t,
