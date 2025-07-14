@@ -36,16 +36,15 @@ import {
 } from 'lucide-react';
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useUserWithTasks } from "@/lib/analytics/page.js";
 
-interface User {
+interface UserWithTasks {
   id: number;
   name: string;
-  email: string;
-  mobile: string;
   role: string;
   profile_image: string;
   work_experience_level: string;
-  created_at: string;
+  tasks: TaskStatusUpdate[];
 }
 
 interface TaskStatusUpdate {
@@ -71,13 +70,8 @@ interface TaskStatusUpdate {
 export default function UserReportsPage() {
   const params = useParams();
   const userId = params.id as string;
-  
   const taskServiceUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
-  const userServiceUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
-
-  const [taskUpdates, setTaskUpdates] = useState<TaskStatusUpdate[]>([]);
-  const [userData, setUserData] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoading, error, mutate } = useUserWithTasks(taskServiceUrl, userId);
 
   // Define rates by work experience level
   const getRateForExperienceLevel = (experienceLevel: string): number => {
@@ -93,124 +87,66 @@ export default function UserReportsPage() {
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [taskResponse, userResponse] = await Promise.all([
-          fetch(`${taskServiceUrl}/api/task-assignment/allTaskStatusUpdates`),
-          fetch(`${userServiceUrl}/api/auth/users`)
-        ]);
-        
-        const taskData = await taskResponse.json();
-        const usersData = await userResponse.json();
-        
-        if (taskData.statusUpdates) {
-          // Filter tasks for the specific user
-          const allUpdates = taskData.statusUpdates;
-          const userTasks = allUpdates.filter((task: TaskStatusUpdate) => 
-            task.updated_by.toString() === userId.toString()
-          );
-          
-          // Sort by updated_at in descending order
-          userTasks.sort((a: TaskStatusUpdate, b: TaskStatusUpdate) => 
-            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-          );
-          
-          // Keep only the latest update for each task (similar to main reports page)
-          const taskUpdatesMap = new Map();
-          const uniqueUserTasks = userTasks.filter((update: TaskStatusUpdate) => {
-            const taskKey = `${update.task_id}`;
-            if (!taskUpdatesMap.has(taskKey)) {
-              taskUpdatesMap.set(taskKey, true);
-              return true;
-            }
-            return false;
-          });
-          
-          setTaskUpdates(uniqueUserTasks);
-        }
-
-        // Find and set user data
-        if (usersData && usersData.users) {
-          const currentUser = usersData.users.find((user: User) => 
-            user.id.toString() === userId.toString()
-          );
-          if (currentUser) {
-            setUserData(currentUser);
-          }
-        }
-        
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setLoading(false);
-      }
-    };
-
-    if (userId) {
-      fetchData();
-    }
-  }, [userId, taskServiceUrl, userServiceUrl]);
-
   // Get the hourly rate based on user's experience level
   const getUserHourlyRate = (): number => {
-    if (!userData?.work_experience_level) return 5.00; // Default rate
-    return getRateForExperienceLevel(userData.work_experience_level);
+    if (!user?.work_experience_level) return 5.00; // Default rate
+    return getRateForExperienceLevel(user.work_experience_level);
   };
-  
+
   // Calculate totals
   const calculateTotals = () => {
     let totalHours = 0;
     let totalAmount = 0;
     let totalSpentTime = 0;
-    
     const hourlyRate = getUserHourlyRate();
-    
-    taskUpdates.forEach((task: TaskStatusUpdate) => {
+    (user?.tasks || []).forEach((task: TaskStatusUpdate) => {
       const hours = task["SubTask.estimated_hours"] || 0;
-      
       // Calculate spent time from hours and minutes
       const spentHours = task.time_taken_in_hours ? parseFloat(task.time_taken_in_hours) : 0;
       const spentMinutes = task.time_taken_in_minutes ? task.time_taken_in_minutes / 60 : 0;
       const totalSpent = spentHours + spentMinutes;
-      
       totalHours += hours;
       totalAmount += hours * hourlyRate;
       totalSpentTime += totalSpent;
     });
-    
     return { totalHours, totalAmount, totalSpentTime };
   };
-  
+
   const { totalHours, totalAmount, totalSpentTime } = calculateTotals();
 
   // Calculate statistics
+  const taskUpdates = user?.tasks || [];
   const totalTasks = taskUpdates.length;
-  
   // Calculate unique tasks (by task_id)
-  const uniqueTaskIds = new Set(taskUpdates.map(task => task.task_id));
+  const uniqueTaskIds = new Set(taskUpdates.map((task: TaskStatusUpdate) => task.task_id));
   const uniqueTasks = uniqueTaskIds.size;
-  
   // Count tasks by status
   const tasksByStatus = {
-    "To Do": taskUpdates.filter(task => task["SubTask.status"] === "To Do").length,
-    "In Progress": taskUpdates.filter(task => task["SubTask.status"] === "In Progress").length,
-    "Review": taskUpdates.filter(task => task["SubTask.status"] === "Review").length,
-    "Completed": taskUpdates.filter(task => task["SubTask.status"] === "Completed").length,
+    "To Do": taskUpdates.filter((task: TaskStatusUpdate) => task["SubTask.status"] === "To Do").length,
+    "In Progress": taskUpdates.filter((task: TaskStatusUpdate) => task["SubTask.status"] === "In Progress").length,
+    "Review": taskUpdates.filter((task: TaskStatusUpdate) => task["SubTask.status"] === "Review").length,
+    "Completed": taskUpdates.filter((task: TaskStatusUpdate) => task["SubTask.status"] === "Completed").length,
   };
-
   // Calculate completion rate
   const completionRate = totalTasks > 0 
     ? Math.round((tasksByStatus["Completed"] / totalTasks) * 100) 
     : 0;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           <div className="text-lg font-medium text-gray-700">Loading user analytics...</div>
         </div>
+      </div>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-lg font-medium text-red-600">Error loading user analytics data.</div>
       </div>
     );
   }
@@ -226,7 +162,7 @@ export default function UserReportsPage() {
               </Link>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-                  {userData?.name || "User"}'s Performance Report
+                  {user?.name || "User"}'s Performance Report
                 </h1>
                 <p className="text-sm text-gray-500 mt-1">Detailed task activity and performance metrics</p>
               </div>
@@ -249,14 +185,14 @@ export default function UserReportsPage() {
                 <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-white">
                   <div className="flex flex-col items-center text-center gap-4">
                     <Avatar className="h-24 w-24 border-4 border-white/20 shadow-xl">
-                      <AvatarImage src={userData?.profile_image} />
+                      <AvatarImage src={user?.profile_image} />
                       <AvatarFallback className="text-2xl font-bold bg-white/10 text-white">
-                        {userData?.name?.[0].toUpperCase()}
+                        {user?.name?.[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="space-y-1">
-                      <h2 className="text-xl font-bold">{userData?.name}</h2>
-                      <p className="text-sm text-blue-100">{userData?.role} - {userData?.work_experience_level}</p>
+                      <h2 className="text-xl font-bold">{user?.name}</h2>
+                      <p className="text-sm text-blue-100">{user?.role} - {user?.work_experience_level}</p>
                     </div>
                   </div>
                 </div>
@@ -492,7 +428,7 @@ export default function UserReportsPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      taskUpdates.map((task, index) => {
+                      taskUpdates.map((task: TaskStatusUpdate, index: number) => {
                         // Determine status badge style
                         let statusBadge;
                         switch (task["SubTask.status"]) {
@@ -601,7 +537,7 @@ export default function UserReportsPage() {
                       <TableRow>
                         <TableCell colSpan={8} className="text-right text-sm text-gray-500">
                           <div className="flex justify-end items-center gap-4">
-                            <span>Hourly Rate: ${getUserHourlyRate().toFixed(2)}/hr ({userData?.work_experience_level || "Entry Level"})</span>
+                            <span>Hourly Rate: ${getUserHourlyRate().toFixed(2)}/hr ({user?.work_experience_level || "Entry Level"})</span>
                           </div>
                         </TableCell>
                       </TableRow>

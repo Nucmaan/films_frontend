@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -29,144 +29,36 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Search, Users, ListTodo, Timer, Eye, CheckCircle, BarChart2, ExternalLink, Trophy, Medal, TrendingUp } from 'lucide-react';
 import Link from "next/link";
+import { useUserLeaderboardStats } from "@/lib/analytics/page.js";
 
-interface TaskStatusUpdate {
+interface LeaderboardUser {
   id: number;
-  task_id: number;
-  updated_by: number;
-  status: string;
-  updated_at: string;
-  time_taken_in_hours: string | null;
-  time_taken_in_minutes: number | null;
-  "SubTask.id": number;
-  "SubTask.title": string;
-  "SubTask.status": string;
-  "SubTask.priority": string;
-  "SubTask.estimated_hours": number;
-  "SubTask.description": string;
-  "SubTask.deadline": string;
-  assigned_user: string;
+  name: string;
   profile_image: string;
-}
-
-interface User {
-  id: number;
-  username: string;
-  profile_image: string;
-}
-
-interface UserWithStats extends User {
-  completedTasks: number;
-  totalHours: number;
-  averageHours: number;
-  rank: number;
-  lastUpdated: string;
-  inProgressTasks: number;
+  role: string;
+  work_experience_level: string;
   todoTasks: number;
+  inProgressTasks: number;
   reviewTasks: number;
+  completedTasks: number;
+  totalTasks: number;
+  completionRate: number;
 }
 
 export default function UserRangs() {
 
   const taskServiceUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
-  const userServiceUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
-
-  const [taskUpdates, setTaskUpdates] = useState<TaskStatusUpdate[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { leaderboard, isLoading, error } = useUserLeaderboardStats(taskServiceUrl);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [taskResponse, usersResponse] = await Promise.all([
-          fetch(`${taskServiceUrl}/api/task-assignment/allTaskStatusUpdates`),
-          fetch(`${userServiceUrl}/api/auth/users`),
-        ]);
-
-        const taskData = await taskResponse.json();
-        const usersData = await usersResponse.json();
-        
-        // Process task updates to keep only the latest status for each task
-        const taskUpdatesMap = new Map();
-        const taskUpdatesArray = taskData.statusUpdates || [];
-        
-        // Sort by updated_at in descending order to get latest updates first
-        taskUpdatesArray.sort((a: any, b: any) => 
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-        );
-        
-        // Keep only the latest status update for each task
-        const uniqueTaskUpdates = taskUpdatesArray.filter((update: any) => {
-          const taskKey = `${update.task_id}-${update.assigned_user}`;
-          if (!taskUpdatesMap.has(taskKey)) {
-            taskUpdatesMap.set(taskKey, true);
-            return true;
-          }
-          return false;
-        });
-
-        setTaskUpdates(uniqueTaskUpdates);
-
-        const uniqueUsers = new Map();
-        uniqueTaskUpdates.forEach((task: TaskStatusUpdate) => {
-          if (!uniqueUsers.has(task.assigned_user)) {
-            uniqueUsers.set(task.assigned_user, {
-              id: task.updated_by,
-              username: task.assigned_user,
-              profile_image: task.profile_image,
-            });
-          }
-        });
-        
-        setUsers(Array.from(uniqueUsers.values()));
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-   const filteredUserStats = users
-    .map((user) => {
-      const userTasks = taskUpdates.filter(
-        (task) => task.assigned_user === user.username
-      );
-
-      const completedTasks = userTasks.filter(
-        (task) => task.status === "Completed"
-      );
-
-      const inProgressTasks = userTasks.filter(
-        (task) => task.status === "In Progress"
-      ).length;
-
-      const todoTasks = userTasks.filter(
-        (task) => task.status === "To Do"
-      ).length;
-
-      const reviewTasks = userTasks.filter(
-        (task) => task.status === "Review"
-      ).length;
-
-      return {
-        ...user,
-        completedTasks: completedTasks.length,
-        inProgressTasks,
-        todoTasks,
-        reviewTasks,
-      };
-    })
-    .filter((user) => {
-       const matchesSearch = searchQuery === "" || 
-        user.username.toLowerCase().includes(searchQuery.toLowerCase());
-
-       let matchesStatus = true;
+  // Filtering and search
+  const filteredUserStats = leaderboard
+    .filter((user: LeaderboardUser) => {
+      const matchesSearch = searchQuery === "" ||
+        user.name.toLowerCase().includes(searchQuery.toLowerCase());
+      let matchesStatus = true;
       if (selectedStatus !== "all") {
         switch (selectedStatus) {
           case "To Do":
@@ -183,25 +75,32 @@ export default function UserRangs() {
             break;
         }
       }
-
       return matchesSearch && matchesStatus;
     })
-    .sort((a, b) => b.completedTasks - a.completedTasks);
+    .sort((a: LeaderboardUser, b: LeaderboardUser) => b.completedTasks - a.completedTasks);
 
   // Calculate total tasks for all users
-  const totalTasks = filteredUserStats.reduce((sum, user) => 
+  const totalTasks = filteredUserStats.reduce((sum: number, user: LeaderboardUser) =>
     sum + user.todoTasks + user.inProgressTasks + user.reviewTasks + user.completedTasks, 0);
-  
+
   // Get top 3 users by completed tasks
   const topUsers = [...filteredUserStats].slice(0, 3);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           <div className="text-lg font-medium text-gray-700">Loading user rankings...</div>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-lg font-medium text-red-600">Error loading leaderboard data.</div>
       </div>
     );
   }
@@ -285,11 +184,11 @@ export default function UserRangs() {
                         <Avatar className="h-16 w-16 border-4 border-white shadow-md">
                           <AvatarImage src={user.profile_image} />
                           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xl font-bold">
-                            {user.username[0].toUpperCase()}
+                            {user.name[0].toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="mt-4 text-center">
-                          <div className="font-semibold text-gray-900">{user.username}</div>
+                          <div className="font-semibold text-gray-900">{user.name}</div>
                           <div className="text-sm text-gray-500 mt-1">#{index + 1} Rank</div>
                         </div>
                         <div className="mt-4 w-full flex justify-between items-center">
@@ -394,7 +293,7 @@ export default function UserRangs() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredUserStats.map((user, index) => {
+                      filteredUserStats.map((user: LeaderboardUser, index: number) => {
                         const isTop3 = index < 3;
                         const totalUserTasks = user.todoTasks + user.inProgressTasks + user.reviewTasks + user.completedTasks;
                         const completionRate = totalUserTasks > 0 
@@ -427,7 +326,7 @@ export default function UserRangs() {
                                   <Avatar className="h-10 w-10 border-2 border-white shadow-sm group-hover:shadow-md transition-shadow">
                                     <AvatarImage src={user.profile_image} />
                                     <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-medium">
-                                      {user.username[0].toUpperCase()}
+                                      {user.name[0].toUpperCase()}
                                     </AvatarFallback>
                                   </Avatar>
                                   {isTop3 && (
@@ -441,7 +340,7 @@ export default function UserRangs() {
                                 </div>
                                 <div>
                                   <div className="font-medium text-gray-900 flex items-center gap-1">
-                                    {user.username}
+                                    {user.name}
                                     {completionRate >= 80 && (
                                       <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                                         High Performer

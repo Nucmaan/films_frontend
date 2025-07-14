@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -47,8 +47,9 @@ import {
 } from 'lucide-react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useUsersWithCompletedTasks } from "@/lib/analytics/page.js";
 
-interface TaskStatusUpdate {
+interface CompletedTask {
   id: number;
   task_id: number;
   updated_by: number;
@@ -67,18 +68,16 @@ interface TaskStatusUpdate {
   profile_image: string;
 }
 
-interface User {
+interface UserWithCompletedTasks {
   id: number;
   name: string;
-  email: string;
-  mobile: string;
-  role: string;
   profile_image: string;
+  role: string;
   work_experience_level: string;
-  created_at: string;
+  completedTasks: CompletedTask[];
 }
 
-interface UserWithStats extends User {
+interface UserWithStats extends UserWithCompletedTasks {
   totalHours: number;
   hourlyRate: number;
   monthlyCommission: number;
@@ -86,103 +85,42 @@ interface UserWithStats extends User {
 }
 
 export default function ReportsAnalyticsPage() {
-  const [taskUpdates, setTaskUpdates] = useState<TaskStatusUpdate[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const taskServiceUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
+  const { users, isLoading, error, mutate } = useUsersWithCompletedTasks(taskServiceUrl);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMonth, setSelectedMonth] = useState<string>("current");
 
-
-  const taskServiceUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
-  const userServiceUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
-
-   const getMonthOptions = () => {
+  const getMonthOptions = () => {
     const options = [];
-    
-     const currentYear = 2025;
-    
+    const currentYear = 2025;
     options.push({ value: "current", label: "Current Month" });
-    
-     for (let month = 11; month >= 0; month--) {
+    for (let month = 11; month >= 0; month--) {
       const monthDate = new Date(currentYear, month, 1);
       const monthValue = format(monthDate, "yyyy-MM");
       const monthLabel = format(monthDate, "MMMM yyyy");
       options.push({ value: monthValue, label: monthLabel });
     }
-    
     return options;
   };
 
   const monthOptions = getMonthOptions();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [taskResponse, usersResponse] = await Promise.all([
-          fetch(`${taskServiceUrl}/api/task-assignment/allTaskStatusUpdates`),
-          fetch(`${userServiceUrl}/api/auth/users`),
-        ]); 
-
-        const taskData = await taskResponse.json();
-        const usersData = await usersResponse.json();
-        
-         const taskUpdatesMap = new Map();
-        const taskUpdatesArray = taskData.statusUpdates || [];
-        
-         taskUpdatesArray.sort((a: any, b: any) => 
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-        );
-        
-         const uniqueTaskUpdates = taskUpdatesArray.filter((update: any) => {
-          const taskKey = `${update.task_id}-${update.updated_by}`;
-          if (!taskUpdatesMap.has(taskKey)) {
-            taskUpdatesMap.set(taskKey, true);
-            return true;
-          }
-          return false;
-        });
-
-         const completedTasks = uniqueTaskUpdates.filter((task: TaskStatusUpdate) => task["SubTask.status"] === "Completed");
-        
-        setTaskUpdates(completedTasks);
-
-         if (usersData && usersData.users) {
-          setUsers(usersData.users);
-        }
-        
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [taskServiceUrl, userServiceUrl]);
-
-   const getTasksForSelectedMonth = () => {
+  // Filter completedTasks by selected month
+  const filterTasksByMonth = (tasks: CompletedTask[]) => {
     if (selectedMonth === "current") {
-      return taskUpdates;
+      return tasks;
     }
-    
     const [year, month] = selectedMonth.split("-").map(Number);
     const startDate = startOfMonth(new Date(year, month - 1));
     const endDate = endOfMonth(new Date(year, month - 1));
-    
-    return taskUpdates.filter((task: TaskStatusUpdate) => {
+    return tasks.filter((task: CompletedTask) => {
       const taskDate = new Date(task.updated_at);
       return isWithinInterval(taskDate, { start: startDate, end: endDate });
     });
   };
 
-  const filteredTasksByMonth = getTasksForSelectedMonth();
-  
-   const usersWithCompletedTasks = users.filter(user => {
-    return filteredTasksByMonth.some((task: TaskStatusUpdate) => task.updated_by === user.id);
-  });
-
-   const getRateForExperienceLevel = (experienceLevel: string): number => {
+  const getRateForExperienceLevel = (experienceLevel: string): number => {
     switch (experienceLevel) {
       case "Entry Level":
         return 5.00;
@@ -191,26 +129,22 @@ export default function ReportsAnalyticsPage() {
       case "Senior Level":
         return 8.00;
       default:
-        return 5.00;  // Default to Entry Level rate
+        return 5.00;
     }
   };
 
-   const usersWithStats = usersWithCompletedTasks.map(user => {
-     const userCompletedTasks = filteredTasksByMonth.filter(
-      task => task.updated_by === user.id
-    );
-    
-     const totalHours = userCompletedTasks.reduce(
-      (sum, task) => sum + (task["SubTask.estimated_hours"] || 0), 
+  // Calculate stats for each user
+  const usersWithStats: UserWithStats[] = users.map((user: UserWithCompletedTasks) => {
+    const userCompletedTasks = filterTasksByMonth(user.completedTasks);
+    const totalHours = userCompletedTasks.reduce(
+      (sum, task) => sum + (task["SubTask.estimated_hours"] || 0),
       0
     );
-    
-     const hourlyRate = getRateForExperienceLevel(user.work_experience_level);
-    
-     const monthlyCommission = totalHours * hourlyRate;
-    
+    const hourlyRate = getRateForExperienceLevel(user.work_experience_level);
+    const monthlyCommission = totalHours * hourlyRate;
     return {
       ...user,
+      completedTasks: userCompletedTasks,
       totalHours,
       hourlyRate,
       monthlyCommission,
@@ -218,26 +152,24 @@ export default function ReportsAnalyticsPage() {
     };
   });
 
-   const filteredUsers = usersWithStats
+  // Filter users by search and status
+  const filteredUsers = usersWithStats
     .filter(user => {
-      const matchesSearch = searchQuery === "" || 
+      const matchesSearch = searchQuery === "" ||
         user.name.toLowerCase().includes(searchQuery.toLowerCase());
-      
       const matchesStatus = selectedStatus === "all" || user.role === selectedStatus;
-      
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesStatus && user.completedTasks.length > 0;
     })
     .sort((a, b) => b.monthlyCommission - a.monthlyCommission);
 
-   const totalCommission = filteredUsers.reduce(
-    (sum, user) => sum + user.monthlyCommission, 
+  const totalCommission = filteredUsers.reduce(
+    (sum, user) => sum + user.monthlyCommission,
     0
   );
 
-   const handleDownload = () => {
-     const headers = ["NO", "Name", "Job Position", "Experience Level", "Total Hours", "Rate ($/hour)", "Monthly Commission ($)"];
-    
-     const csvData = filteredUsers.map((user, index) => [
+  const handleDownload = () => {
+    const headers = ["NO", "Name", "Job Position", "Experience Level", "Total Hours", "Rate ($/hour)", "Monthly Commission ($)"];
+    const csvData = filteredUsers.map((user, index) => [
       index + 1,
       user.name,
       user.role,
@@ -246,8 +178,7 @@ export default function ReportsAnalyticsPage() {
       `$${user.hourlyRate.toFixed(2)}`,
       `$${user.monthlyCommission.toFixed(2)}`
     ]);
-    
-     csvData.push([
+    csvData.push([
       "",
       "TOTAL",
       "",
@@ -256,36 +187,39 @@ export default function ReportsAnalyticsPage() {
       "",
       `$${totalCommission.toFixed(2)}`
     ]);
-    
-     const csvContent = [
+    const csvContent = [
       headers.join(","),
       ...csvData.map(row => row.join(","))
     ].join("\n");
-    
-     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    
-     const month = selectedMonth === "current" 
-      ? format(new Date(), "MMMM_yyyy") 
+    const month = selectedMonth === "current"
+      ? format(new Date(), "MMMM_yyyy")
       : selectedMonth.replace("-", "_");
-    
     link.setAttribute("href", url);
     link.setAttribute("download", `team_commission_${month}.csv`);
     link.style.visibility = "hidden";
-    
-     document.body.appendChild(link);
+    document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           <div className="text-lg font-medium text-gray-700">Loading analytics dashboard...</div>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-lg font-medium text-red-600">Error loading analytics data.</div>
       </div>
     );
   }

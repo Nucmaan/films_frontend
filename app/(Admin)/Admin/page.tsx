@@ -83,7 +83,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
-       {/* <UserRangs /> */}
+        <UserRangs /> 
       </div>
     </div>
   );
