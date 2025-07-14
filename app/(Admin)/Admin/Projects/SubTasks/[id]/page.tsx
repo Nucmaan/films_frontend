@@ -131,55 +131,11 @@ const getFileType = (fileUrl: string) => {
   return "other";
 };
 
-function useSubtasks(taskId: string | string[] | undefined, taskService: string | undefined) {
-  const fetcher = async (url: string) => {
-    const res = await axios.get(url);
-    if (!Array.isArray(res.data)) return [];
-    return res.data.map((item: any) => ({
-      ...item,
-      file_url: (() => {
-        if (!item.file_url) return [];
-        if (typeof item.file_url === "string") {
-          if (item.file_url.trim().startsWith('[')) {
-            try {
-              return JSON.parse(item.file_url);
-            } catch (e) {
-              return [item.file_url];
-            }
-          } else {
-            return [item.file_url];
-          }
-        }
-        return Array.isArray(item.file_url) ? item.file_url : [item.file_url];
-      })(),
-      assigned_to: item.assigned_to || 0,
-      assigned_user: item.assigned_user || null,
-      profile_image: item.profile_image || null,
-    })) as Subtask[];
-  };
-  const shouldFetch = !!taskId && !!taskService;
-  const { data, error, isLoading, mutate } = useSWR(
-    shouldFetch ? `${taskService}/api/subtasks/task/${taskId}` : null,
-    fetcher,
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 60000,
-    }
-  );
-  return {
-    subtasks: data || [],
-    isLoading,
-    error,
-    mutate,
-  };
-}
-
 export default function Page() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
-  const taskService = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
-  const userService = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
+  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
   const [isDeletingSubtask, setIsDeletingSubtask] = useState<number | null>(
@@ -256,6 +212,9 @@ export default function Page() {
   const [inlineSelectedFiles, setInlineSelectedFiles] =
     useState<FileList | null>(null);
 
+  const taskService = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
+  const userService = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
+
   // SWR fetcher for users
   const fetcher = (url: string) => fetch(url).then(res => res.json());
   const { data: usersData } = useSWR(
@@ -271,7 +230,131 @@ export default function Page() {
     }
   }, [usersData]);
 
-  const { subtasks, isLoading: subtasksLoading, error: subtasksError, mutate: mutateSubtasks } = useSubtasks(id, taskService);
+  const fetchSubtasks = async () => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      try {
+        const res = await axios.get(`${taskService}/api/subtasks/task/${id}`);
+       // console.log("API Response:", res.data);
+
+        if (!res.data || !Array.isArray(res.data)) {
+          console.log(
+            "No subtasks found or invalid response format:",
+            res.data
+          );
+          setSubtasks([]);
+          return;
+        }
+
+        const parsedSubtasks = res.data.map((item: any) => ({
+          ...item,
+          file_url: (() => {
+            if (!item.file_url) return [];
+            if (typeof item.file_url === "string") {
+              // Check if it looks like JSON array
+              if (item.file_url.trim().startsWith('[')) {
+                try {
+                  return JSON.parse(item.file_url);
+                } catch (e) {
+                  return [item.file_url]; // If parsing fails, treat as single URL
+                }
+              } else {
+                // It's a plain URL string
+                return [item.file_url];
+              }
+            }
+            // If it's already an array
+            return Array.isArray(item.file_url) ? item.file_url : [item.file_url];
+          })(),
+          assigned_to: item.assigned_to || 0,
+          assigned_user: item.assigned_user || null,
+          profile_image: item.profile_image || null,
+        })) as Subtask[];
+
+        console.log("Parsed subtasks:", parsedSubtasks);
+        setSubtasks(parsedSubtasks);
+      } catch (fetchError: any) {
+        console.log("Could not fetch subtasks:", fetchError.message);
+        setSubtasks([]);
+        return;
+      }
+
+      try {
+        const checkEndpoint = await axios
+          .head(`${taskService}/api/task-assignment/allTaskStatusUpdates`)
+          .catch(() => ({ status: 404 }));
+
+        if (checkEndpoint.status === 200) {
+          const assignmentsResponse = await axios.get(
+            `${taskService}/api/task-assignment/allTaskStatusUpdates`
+          );
+
+          if (
+            assignmentsResponse.data &&
+            assignmentsResponse.data.statusUpdates
+          ) {
+            const latestAssignments =
+              assignmentsResponse.data.statusUpdates.reduce(
+                (acc: any, curr: any) => {
+                  if (
+                    !acc[curr.task_id] ||
+                    new Date(curr.updated_at) >
+                      new Date(acc[curr.task_id].updated_at)
+                  ) {
+                    acc[curr.task_id] = {
+                      assigned_user: curr.assigned_user,
+                      profile_image: curr.profile_image,
+                      updated_by: curr.updated_by,
+                    };
+                  }
+                  return acc;
+                },
+                {}
+              );
+
+            setSubtasks((prev) =>
+              prev.map((subtask) => {
+                const assignment = latestAssignments[subtask.id];
+                if (assignment) {
+                  return {
+                    ...subtask,
+                    assigned_to: assignment.updated_by || subtask.assigned_to,
+                    assigned_user:
+                      assignment.assigned_user || subtask.assigned_user,
+                    profile_image:
+                      assignment.profile_image || subtask.profile_image,
+                  } as Subtask;
+                }
+                return subtask;
+              })
+            );
+          }
+        } else {
+          console.log("Assignments endpoint not available - skipping");
+        }
+      } catch (assignError) {
+        console.log("Error fetching assignments (non-critical):", assignError);
+      }
+    } catch (error) {
+      console.log("General error in fetchSubtasks:", error);
+
+      setSubtasks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchSubtasks();
+    }
+  }, [id]);
 
   const handleAssignTask = async (subtaskId: number, userId: number) => {
     try {
@@ -295,8 +378,8 @@ export default function Page() {
         console.log("Updating UI optimistically despite API error");
       }
 
-      mutateSubtasks((prev) =>
-        (prev ?? []).map((subtask) =>
+      setSubtasks((prev) =>
+        prev.map((subtask) =>
           subtask.id === subtaskId
             ? ({
                 ...subtask,
@@ -308,7 +391,7 @@ export default function Page() {
         )
       );
 
-      setTimeout(mutateSubtasks, 500);
+      setTimeout(fetchSubtasks, 500);
     } catch (error: any) {
       console.error("General error in assignment process:", error);
       toast.error(
@@ -330,7 +413,7 @@ export default function Page() {
 
         if (response.status === 200 || response.status === 204) {
           toast.success("Subtask deleted successfully");
-          mutateSubtasks((prev) => (prev ?? []).filter((sub) => sub.id !== subtaskId));
+          setSubtasks((prev) => prev.filter((sub) => sub.id !== subtaskId));
         }
       } catch (error) {
         console.error("Failed to delete subtask:", error);
@@ -367,17 +450,18 @@ export default function Page() {
       if (response.status === 200 || response.status === 204) {
         toast.success("Subtask updated successfully");
 
-        mutateSubtasks((prev) =>
-          (prev ?? []).map((subtask) =>
-            subtask.id === editingSubtaskId
-              ? { ...subtask, ...(subtaskData as Partial<Subtask>) }
-              : subtask
-          ) as Subtask[]
+        setSubtasks(
+          (prev) =>
+            prev.map((subtask) =>
+              subtask.id === editingSubtaskId
+                ? { ...subtask, ...(subtaskData as Partial<Subtask>) }
+                : subtask
+            ) as Subtask[]
         );
 
         setEditingSubtaskId(null);
 
-        mutateSubtasks();
+        fetchSubtasks();
       }
     } catch (error: any) {
       console.error("Error updating subtask:", error);
@@ -494,7 +578,7 @@ export default function Page() {
         setSelectedFiles(null);
         setShowAddSubtaskForm(false);
 
-        mutateSubtasks();
+        setTimeout(fetchSubtasks, 500);
       } else {
         toast.error("Failed to create subtask. Please try again.");
       }
@@ -532,7 +616,7 @@ export default function Page() {
       setSelectedFiles(null);
       setShowAddSubtaskForm(false);
 
-      mutateSubtasks();
+      setTimeout(fetchSubtasks, 500);
     } finally {
       setIsCreatingSubtask(false);
     }
@@ -664,7 +748,7 @@ export default function Page() {
         setInlineSelectedFiles(null);
         setShowInlineForm(false);
 
-        mutateSubtasks();
+        setTimeout(fetchSubtasks, 500);
       } else {
         toast.error("Failed to create subtask. Please try again.");
       }
@@ -704,7 +788,7 @@ export default function Page() {
       setInlineSelectedFiles(null);
       setShowInlineForm(false);
 
-      mutateSubtasks();
+      setTimeout(fetchSubtasks, 500);
     } finally {
       setIsCreatingSubtask(false);
     }
@@ -737,14 +821,9 @@ export default function Page() {
         </div>
       </div>
 
-      {subtasksLoading ? (
+      {loading ? (
         <div className="flex justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff4e00]"></div>
-        </div>
-      ) : subtasksError ? (
-        <div className="text-center py-8">
-          <FiAlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-red-500">Error loading subtasks: {subtasksError.message}</p>
         </div>
       ) : (
         <>
