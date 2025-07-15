@@ -293,7 +293,7 @@ export default function ProjectDetail({ params }: { params: any }) {
             permission to view it.
           </p>
           <button
-            onClick={() => router.push("/Admin/Projects")}
+            onClick={() => router.push("/Supervisor/Projects")}
             className="inline-flex items-center px-6 py-3 rounded-lg text-white bg-[#ff4e00] hover:bg-[#ff4e00]/90 transition-all font-medium shadow-sm"
           >
             <FiArrowLeft className="mr-2" /> Back to Projects
@@ -309,7 +309,7 @@ export default function ProjectDetail({ params }: { params: any }) {
     <div className="w-full mx-auto py-5 px-4 sm:px-4 lg:px-4">
        <div className="mb-6">
         <button
-          onClick={() => router.push('/Admin/Projects')}
+          onClick={() => router.push('/Supervisor/Projects')}
           className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff4e00] transition-colors"
         >
           <FiArrowLeft className="w-4 h-4 mr-2" />
@@ -684,7 +684,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                             
                             <div className="flex justify-between items-center border-t border-gray-100 pt-3 mt-3">
                               <button
-                                onClick={() => router.push(`/Admin/Projects/SubTasks/${task.id}`)}
+                                onClick={() => router.push(`/Supervisor/Projects/SubTasks/${task.id}`)}
                                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                               >
                                 View Task
@@ -811,7 +811,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                             
                              <div className="flex justify-between items-center border-t border-gray-100 pt-3 mt-3">
                               <button
-                                onClick={() => router.push(`/Admin/Projects/SubTasks/${task.id}`)}
+                                onClick={() => router.push(`/Supervisor/Projects/SubTasks/${task.id}`)}
                                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                               >
                                 View Task
@@ -938,7 +938,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                             
                              <div className="flex justify-between items-center border-t border-gray-100 pt-3 mt-3">
                               <button
-                                onClick={() => router.push(`/Admin/Projects/SubTasks/${task.id}`)}
+                                onClick={() => router.push(`/Supervisor/Projects/SubTasks/${task.id}`)}
                                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                               >
                                 View Task
@@ -1065,7 +1065,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                             
                              <div className="flex justify-between items-center border-t border-gray-100 pt-3 mt-3">
                               <button
-                                onClick={() => router.push(`/Admin/Projects/SubTasks/${task.id}`)}
+                                onClick={() => router.push(`/Supervisor/Projects/SubTasks/${task.id}`)}
                                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                               >
                                 View Task
@@ -1204,7 +1204,7 @@ export default function ProjectDetail({ params }: { params: any }) {
 
                     if (response.data.success) {
                       toast.success("Project deleted successfully");
-                      router.push("/Admin/Projects");
+                      router.push("/Supervisor/Projects");
                       mutateProject(); // Re-fetch project
                     } else {
                       toast.error(response.data.message || "Failed to delete project");
