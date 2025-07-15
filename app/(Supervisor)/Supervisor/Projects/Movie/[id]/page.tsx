@@ -1,41 +1,56 @@
 "use client";
 
+export const runtime = 'edge';
+
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import LoadingReuse from "@/components/LoadingReuse";
+
 import { FiX, FiImage, FiArrowLeft } from "react-icons/fi";
 import { useRouter, useParams } from "next/navigation";
 import userAuth from "@/myStore/userAuth";
 import { motion } from "framer-motion";
+import Image from "next/image";
+import Project from "@/service/Project";
+import { useMovieProjects } from "@/lib/project/movie";
 
-const PROJECT_STATUSES = ["Pending", "In Progress", "Completed"];
+const PROJECT_STATUSES = ["Pending", "In Progress", "Completed", "Planning"];
 const PROJECT_PRIORITIES = ["Low", "Medium", "High"];
 
 export default function EditProjectPage() {
   const router = useRouter();
   const { id } = useParams();
   
-  const [loading, setLoading] = useState(true);
+
   const [project, setProject] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [availableChannels, setAvailableChannels] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Use SWR hook to get Movie projects
+  const { projects: movieProjects } = useMovieProjects();
 
   // Fetch the project data
   const fetchProject = async () => {
     try {
-      setLoading(true);
       console.log('Fetching project with ID:', id);
       
-      const response = await axios.get(`http://localhost:8002/api/project/singleProject/${id}`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_PROJECT_SERVICE_URL}/api/project/singleProject/${id}`);
       console.log('Project API response:', response);
       
       if (response.status === 200 && response.data.success) {
         const projectData = response.data.project;
         console.log('Project data successfully loaded:', projectData);
+        
+        // Verify this is a Movie project
+        if (projectData.project_type !== "Movie") {
+          toast.error("This project is not a Movie project");
+          router.push('/Supervisor/Projects/Movie');
+          return;
+        }
         
         // Debug date formats
         if (projectData.deadline) {
@@ -47,6 +62,9 @@ export default function EditProjectPage() {
         }
         
         setProject(projectData);
+        
+        // Debug the project channel
+        console.log('Project channel from API:', projectData.channel);
         
         // Set preview image if project has one
         if (projectData.project_image) {
@@ -67,15 +85,37 @@ export default function EditProjectPage() {
         router.push('/Supervisor/Projects/Movie');
       }, 1500);
     } finally {
-      setLoading(false);
+      // Removed loading state
     }
   };
 
   useEffect(() => {
     if (id) {
       fetchProject();
+      // fetchChannels(); // REMOVE THIS LINE
     }
   }, [id]);
+
+  // Extract available channels from movieProjects
+  useEffect(() => {
+    if (movieProjects && movieProjects.length > 0) {
+      const uniqueChannels = [...new Set(movieProjects.map((project: any) => 
+        project.channel || "unknown"
+      ))].sort() as string[];
+      setAvailableChannels(uniqueChannels);
+    }
+  }, [movieProjects]);
+
+  // Update available channels when project loads to ensure current project's channel is included
+  useEffect(() => {
+    if (project && project.channel && availableChannels.length > 0) {
+      // Check if project's channel is in available channels
+      if (!availableChannels.includes(project.channel)) {
+        console.log('Project channel not in available channels, adding it:', project.channel);
+        setAvailableChannels(prev => [...prev, project.channel].sort());
+      }
+    }
+  }, [project, availableChannels]);
 
   // Reset image states
   const resetImageStates = () => {
@@ -139,35 +179,34 @@ export default function EditProjectPage() {
       const deadlineInput = (form.elements.namedItem('deadline') as HTMLInputElement).value;
       const status = (form.elements.namedItem('status') as HTMLSelectElement).value;
       const priority = (form.elements.namedItem('priority') as HTMLSelectElement).value;
+      const channel = (form.elements.namedItem('channel') as HTMLSelectElement).value;
       const progress = (form.elements.namedItem('progress') as HTMLInputElement).value;
       const description = (form.elements.namedItem('description') as HTMLTextAreaElement).value;
       
-      // Ensure deadline is in the correct format (YYYY-MM-DD)
       console.log('Raw deadline input:', deadlineInput);
       
       // Append all form data
       formData.append('id', project.id);
       formData.append('name', name);
-      formData.append('deadline', deadlineInput); // Use the properly formatted date
+      formData.append('deadline', deadlineInput); 
       formData.append('status', status);
       formData.append('priority', priority);
-      formData.append('project_type', 'Movie'); // Always set to Musalsal
+      formData.append('project_type', 'Movie'); // Always set to Movie
+      formData.append('channel', channel);
       formData.append('progress', progress);
       formData.append('description', description);
       
-      // Add the image file if selected
       if (selectedFile) {
         formData.append('project_image', selectedFile);
       }
       
-      // Log all form data for debugging
       console.log('Form data being sent:');
       for (const pair of formData.entries()) {
         console.log(pair[0], pair[1]);
       }
       
       const response = await axios.put(
-        `http://localhost:8002/api/project/updateProject/${project.id}`,
+        `${process.env.NEXT_PUBLIC_PROJECT_SERVICE_URL}/api/project/updateProject/${project.id}`,
         formData,
         { 
           headers: {
@@ -193,13 +232,7 @@ export default function EditProjectPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <LoadingReuse />
-      </div>
-    );
-  }
+
 
   if (!project) {
     return (
@@ -209,7 +242,7 @@ export default function EditProjectPage() {
           onClick={() => router.push('/Supervisor/Projects/Movie')}
           className="px-4 py-2 bg-[#ff4e00] text-white rounded-md hover:bg-[#ff4e00]/90 transition-colors"
         >
-          Back to Projects
+          Back to Movies
         </button>
       </div>
     );
@@ -228,11 +261,11 @@ export default function EditProjectPage() {
           className="mb-6 flex items-center gap-2 text-gray-600 hover:text-[#ff4e00] transition-colors"
         >
           <FiArrowLeft />
-          <span>Back to Projects</span>
+          <span>Back to Movie Projects</span>
         </button>
 
-        <h1 className="text-2xl font-bold mb-2 text-gray-800">Edit Project: {project.name}</h1>
-        <p className="text-gray-500">Make changes to your project details</p>
+        <h1 className="text-2xl font-bold mb-2 text-gray-800">Edit Movie Project: {project.name}</h1>
+        <p className="text-gray-500">Make changes to your movie project details</p>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -248,9 +281,11 @@ export default function EditProjectPage() {
               >
                 {previewImage ? (
                   <div className="relative w-full h-full">
-                    <img 
+                    <Image 
                       src={previewImage} 
                       alt="Preview" 
+                      width={400}
+                      height={176}
                       className="w-full h-full object-cover rounded-lg"
                     />
                     <button
@@ -340,11 +375,30 @@ export default function EditProjectPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Project Type</label>
-                  <div className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-gray-50 text-gray-700">
-                  Movie
-                  </div>
-                  <input type="hidden" name="project_type" value="Movie" />
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Channel</label>
+                  <select
+                    name="channel"
+                    required
+                    defaultValue={project.channel || "unknown"}
+                    key={`${project.channel}-${availableChannels.length}`} // Force re-render when project or channels change
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  >
+                    {/* Always include the current project's channel if it exists */}
+                    {project.channel && !availableChannels.includes(project.channel) && (
+                      <option key={project.channel} value={project.channel}>
+                        {project.channel}
+                      </option>
+                    )}
+                    {availableChannels.length > 0 ? (
+                      availableChannels.map(channel => (
+                        <option key={channel} value={channel}>
+                          {channel === "unknown" ? "Unknown" : channel}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="Astaan Films">Astaan Films</option>
+                    )}
+                  </select>
                 </div>
                 
                 <div>

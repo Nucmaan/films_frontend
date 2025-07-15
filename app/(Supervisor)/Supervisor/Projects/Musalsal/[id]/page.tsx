@@ -24,13 +24,16 @@ export default function EditProjectPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
+  const projectService = process.env.NEXT_PUBLIC_PROJECT_SERVICE_URL;
+
+
   // Fetch the project data
   const fetchProject = async () => {
     try {
       setLoading(true);
       console.log('Fetching project with ID:', id);
       
-      const response = await axios.get(`http://localhost:8002/api/project/singleProject/${id}`);
+      const response = await axios.get(`${projectService}/api/project/singleProject/${id}`);
       console.log('Project API response:', response);
       
       if (response.status === 200 && response.data.success) {
@@ -167,7 +170,7 @@ export default function EditProjectPage() {
       }
       
       const response = await axios.put(
-        `http://localhost:8002/api/project/updateProject/${project.id}`,
+        `${projectService}/api/project/updateProject/${project.id}`,
         formData,
         { 
           headers: {

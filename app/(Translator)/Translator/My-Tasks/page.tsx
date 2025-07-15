@@ -3,6 +3,7 @@
 import userAuth from '@/myStore/userAuth';
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
+import { useUserCompletedTasks } from "@/lib/allInOne/page.js";
 
 interface TaskStatusUpdate {
   id: number;
@@ -32,58 +33,20 @@ interface TaskStatusUpdate {
 
 export default function MyTasksPage() {
   const user = userAuth((state) => state.user);
-  const [tasks, setTasks] = useState<TaskStatusUpdate[]>([]);
+  const taskUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
+  const { tasks, isLoading, error } = useUserCompletedTasks(taskUrl, user?.id);
   const [filteredTasks, setFilteredTasks] = useState<TaskStatusUpdate[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<Date | undefined>(new Date());
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(true);
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskStatusUpdate | null>(null);
   const [showModal, setShowModal] = useState(false);
 
-  const taskUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchTasks();
-    }
-  }, [user?.id]);
-
   useEffect(() => {
     filterTasks();
-  }, [tasks, selectedMonth, selectedStatus]);
-
-  const fetchTasks = async () => {
-    try {
-      const response = await fetch(`${taskUrl}/api/task-assignment/allTaskStatusUpdates`);
-      const data = await response.json();
-      if (data.success) {
-         const userCompletedTasks = data.statusUpdates.filter((task: TaskStatusUpdate) => 
-          task.updated_by === user?.id && task.status === 'Completed'
-        );
-
-         const latestTasks = Object.values(
-          userCompletedTasks.reduce((acc: { [key: number]: TaskStatusUpdate }, task: TaskStatusUpdate) => {
-            const subtaskId = task["SubTask.id"];
-            if (!acc[subtaskId] || new Date(acc[subtaskId].updated_at) < new Date(task.updated_at)) {
-              acc[subtaskId] = task;
-            }
-            return acc;
-          }, {})
-        ) as TaskStatusUpdate[];
-
-        setTasks(latestTasks);
-      }
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [tasks, selectedMonth]);
 
   const filterTasks = () => {
     let filtered = [...tasks];
-
     if (selectedMonth) {
       filtered = filtered.filter(task => {
         const taskDate = new Date(task.updated_at);
@@ -91,11 +54,6 @@ export default function MyTasksPage() {
                taskDate.getFullYear() === selectedMonth.getFullYear();
       });
     }
-
-    if (selectedStatus !== "all") {
-      filtered = filtered.filter(task => task.status === selectedStatus);
-    }
-
     setFilteredTasks(filtered);
   };
 
@@ -311,14 +269,14 @@ export default function MyTasksPage() {
               </div>
               
               <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
+                value="all" // Removed selectedStatus state
+                onChange={(e) => {
+                  // No-op, as status filtering is removed
+                }}
                 className="px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors appearance-none cursor-pointer"
               >
                 <option value="all">All Status</option>
-                <option value="To Do">To Do</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
+                {/* Removed status options */}
               </select>
             </div>
           </div>
@@ -366,7 +324,7 @@ export default function MyTasksPage() {
               <div>
                 <p className="text-sm text-gray-500">Completed</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {tasks.filter(t => t.status === 'Completed').length}
+                  {tasks.filter((t: TaskStatusUpdate) => t.status === 'Completed').length}
                 </p>
               </div>
             </div>
@@ -463,7 +421,7 @@ export default function MyTasksPage() {
             <button
               onClick={() => {
                 setSelectedMonth(new Date());
-                setSelectedStatus("all");
+                // setSelectedStatus("all"); // Removed status reset
               }}
               className="mt-4 text-[#ff4e00] font-medium hover:text-[#ff4e00]/80 transition-colors"
             >

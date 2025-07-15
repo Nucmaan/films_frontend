@@ -9,11 +9,13 @@ import { useRouter } from "next/navigation";
 import userAuth from "@/myStore/userAuth";
 import { motion } from "framer-motion";
 import Project from "@/service/Project";
+import { useMovieProjects } from "@/lib/project/movie";
+import Image from "next/image";
 
-const PROJECT_STATUSES = ["Pending", "In Progress", "Completed"];
+const PROJECT_STATUSES = ["Pending", "In Progress", "Completed", "Planning"];
 const PROJECT_PRIORITIES = [ "Low", "Medium", "High"];
-const PROJECT_TYPES = ["Movie"];
 
+// Remove hardcoded movie channels - will be dynamically loaded from API
 
 const getStatusColor = (status: string) => {
   switch(status) {
@@ -23,6 +25,8 @@ const getStatusColor = (status: string) => {
       return "bg-blue-100 text-blue-800";
     case "Completed":
       return "bg-green-100 text-green-800";
+    case "Planning":
+      return "bg-purple-100 text-purple-800";
     default:
       return "bg-gray-100 text-gray-800";
   }
@@ -96,7 +100,8 @@ const calculateDaysLeft = (deadline: string) => {
   );
 };
 
- const KanbanCard = ({ 
+// Enhanced Kanban Card to match the shared image design
+const KanbanCard = ({ 
   project, 
   onView, 
   onEdit, 
@@ -109,65 +114,72 @@ const calculateDaysLeft = (deadline: string) => {
 }) => {
   const { days, overdue } = calculateDaysLeft(project.deadline);
   
- 
-  const imageUrl = useMemo(() => {
-    if (!project.project_image) {
-      return "https://via.placeholder.com/300x169?text=No+Image";
+  const getImageUrl = (project: any) => {
+    console.log('Project image URL:', project.project_image);
+    if (project.project_image) {
+      return project.project_image;
     }
-    return project.project_image;
-  }, [project.project_image]);
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE2OSIgdmlld0JveD0iMCAwIDMwMCAxNjkiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMwMCIgaGVpZ2h0PSIxNjkiIGZpbGw9IiNFNUU3RUIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSIjNjY2Ij5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
+  };
   
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
-       <div className={`h-1.5 w-full ${
+      {/* Color Bar based on project status */}
+      <div className={`h-1.5 w-full ${
         project.status === "Pending" ? "bg-yellow-400" : 
         project.status === "In Progress" ? "bg-blue-400" : 
         project.status === "Completed" ? "bg-green-400" : 
+        project.status === "Planning" ? "bg-purple-400" : 
         "bg-gray-300"
       }`}></div>
       
-       <div className="w-full aspect-video overflow-hidden">
-        {project.project_image ? (
-          <img 
-            src={imageUrl}
-            alt={project.name}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-               console.error("Image failed to load:", project.project_image);
-              e.currentTarget.src = "https://via.placeholder.com/300x169?text=Image+Not+Found";
-            }}
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-            <FiImage size={40} className="text-gray-400" />
-          </div>
-        )}
+      {/* Project Image */}
+      <div className="w-full aspect-video overflow-hidden">
+        {getImageUrl(project) ? (
+          <img
+            src={getImageUrl(project)}
+          alt={project.name}
+          width={400}
+          height={176}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '0.5rem' }}
+        />
+        ) : null}
       </div>
       
-       <div className="p-5">
+      {/* Project Info */}
+      <div className="p-5">
         <div className="flex justify-between items-start mb-4">
-           <div>
+          {/* Project Title and Type */}
+          <div>
             <h3 className="font-medium text-gray-800 text-lg mb-1" title={project.name}>
               {project.name}
             </h3>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500">{project.creator_name || "Astaan Film"}</span>
+              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                {project.project_type}
+              </span>
             </div>
           </div>
           
-           <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+          {/* Status Badge */}
+          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
             project.status === "Pending" ? "bg-yellow-100 text-yellow-800" :
             project.status === "In Progress" ? "bg-blue-100 text-blue-800" :
             project.status === "Completed" ? "bg-green-100 text-green-800" :
+            project.status === "Planning" ? "bg-purple-100 text-purple-800" :
             "bg-gray-100 text-gray-800"
           }`}>
             {project.status}
           </span>
         </div>
         
-         <div className="space-y-3 mb-4">
-           <div className="flex flex-col text-sm text-gray-600 gap-2">
-             <div className="flex items-center gap-1.5">
+        {/* Dates */}
+        <div className="space-y-3 mb-4">
+          {/* Date Display */}
+          <div className="flex flex-col text-sm text-gray-600 gap-2">
+            {/* Created Date */}
+            <div className="flex items-center gap-1.5">
               <svg className="text-[#ff4e00]/70" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
                 <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -175,7 +187,8 @@ const calculateDaysLeft = (deadline: string) => {
               <span className="text-gray-500">Created: {formatDate(project.created_at || project.start_date)}</span>
             </div>
             
-             <div className="flex items-center gap-1.5">
+            {/* Deadline Date */}
+            <div className="flex items-center gap-1.5">
               <svg className="text-[#ff4e00]/70" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
                 <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -194,66 +207,60 @@ const calculateDaysLeft = (deadline: string) => {
           </div>
         </div>
         
-         <div className="flex items-center justify-between">
-           <div className="flex items-center gap-1.5">
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(project.priority)}`}>
-              {project.priority}
-            </span>
-            {project.project_type && project.project_type !== "unknown" && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                {project.project_type}
-              </span>
-            )}
-          </div>
-          
-           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1 text-xs text-gray-500">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400">
-                <path d="M9 11L12 14L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M21 12V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              {project.tasks_count || 0} Tasks
-            </span>
+        {/* Priority */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className={`w-2 h-2 rounded-full ${getPriorityDot(project.priority)}`}></div>
+          <span className="text-sm text-gray-600">{project.priority} Priority</span>
+        </div>
+        
+        {/* Task count for this project */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center text-sm text-gray-600">
+            <svg className="w-4 h-4 mr-1.5 text-[#ff4e00]/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            <span>{project.tasks_count || 0} tasks</span>
           </div>
         </div>
-      </div>
-      
-       <div className="flex justify-end gap-1 px-4 py-2 border-t border-gray-100">
-        <button 
-          onClick={onView}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors border border-blue-100"
-          title="View Details"
-        >
-          <FiEye size={16} />
-        </button>
-        <button 
-          onClick={onEdit}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors border border-amber-100"
-          title="Edit Project"
-        >
-          <FiEdit size={16} />
-        </button>
-        <button 
-          onClick={onDelete}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors border border-red-100"
-          title="Delete Project"
-        >
-          <FiTrash2 size={16} />
-        </button>
+        
+        {/* Actions */}
+        <div className="flex gap-2">
+          <button
+            onClick={onView}
+            className="flex-1 bg-[#ff4e00] text-white py-2 px-3 rounded-lg hover:bg-[#ff4e00]/90 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+          >
+            <FiEye size={16} />
+            View
+          </button>
+          <button
+            onClick={onEdit}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors border border-blue-100"
+            title="Edit Project"
+          >
+            <FiEdit size={16} />
+          </button>
+          <button
+            onClick={onDelete}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors border border-red-100"
+            title="Delete Project"
+          >
+            <FiTrash2 size={16} />
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
 export default function ProjectsPage() {
-
   const router = useRouter();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedPriority, setSelectedPriority] = useState("All");
-  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [selectedChannel, setSelectedChannel] = useState("All");
   const [projectList, setProjectList] = useState<any[]>([]);
+  const [availableChannels, setAvailableChannels] = useState<string[]>([]);
   const [viewingProject, setViewingProject] = useState<any>(null);
   const [deletingProject, setDeletingProject] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -265,98 +272,64 @@ export default function ProjectsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const user = userAuth((state) => state.user);
+  const [page, setPage] = useState(1);
 
-  const taskServiceUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
-  
-
-  const getProjects = async () => {
-    try {
-      setLoadingProjects(true);
-      const response = await Project.getAllProjects();
-      
-      if (response.status === 200) {
-         const MovieProjects = response.data.projects.filter((project: any) => 
-          project.project_type === "Movie"
-        );
-        
-         const projectsWithTaskCounts = await Promise.all(
-          MovieProjects.map(async (project: any) => {
-            try {
-               if (!project.id) {
-                console.warn(`Project without ID found:`, project);
-                return {
-                  ...project,
-                  tasks_count: 0
-                };
-              }
-
-              const tasksResponse = await axios.get(
-                `${taskServiceUrl}/api/task/projectTasks/${project.id}`
-              ).catch(error => {
-                 if (error.response && error.response.status === 404) {
-                  console.log(`No tasks found for project ${project.id}`);
-                  return { data: { success: true, tasks: [] } };
-                }
-                throw error;  
-              });
-              
-               if (tasksResponse && tasksResponse.data && tasksResponse.data.success) {
-                return {
-                  ...project,
-                  tasks_count: tasksResponse.data.tasks ? tasksResponse.data.tasks.length : 0
-                };
-              }
-              
-              return {
-                ...project,
-                tasks_count: 0
-              };
-            } catch (error) {
-              console.error(`Error fetching tasks for project ${project.id}:`, error);
-               return {
-                ...project,
-                tasks_count: 0
-              };
-            }
-          })
-        );
-        
-        setProjectList(projectsWithTaskCounts);
-      } else {
-        toast.error("Failed to load projects");
-      }
-    } catch (error: any) {
-      const message = error.response?.data?.message || "Server error";
-      toast.error(message);
-    } finally {
-      setLoadingProjects(false);
-    }
-  };
+  // Use paginated SWR hook
+  const {
+    projects: movieProjects,
+    total,
+    page: currentPage,
+    pageSize,
+    totalPages,
+    hasNext,
+    hasPrevious,
+    isLoading,
+    error,
+    mutate: refreshProjects
+  } = useMovieProjects(page);
 
   useEffect(() => {
-    getProjects();
-  }, []);
+    if (movieProjects) {
+      const uniqueChannels = [...new Set(movieProjects.map((project: any) => 
+        project.channel || "unknown"
+      ))].sort() as string[];
+      setAvailableChannels(uniqueChannels);
+      setProjectList(movieProjects);
+    }
+  }, [movieProjects]);
 
   const filteredProjects = projectList.filter((project: any) => {
-     const matchesSearch =
+    // All projects in projectList are already Movie type, so no need to filter by type
+    
+    // Filter by search text
+    const matchesSearch =
       project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (project.description && project.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
+    // Filter by status
     let matchesStatus = true;
     if (selectedStatus !== "All") {
-      if (PROJECT_TYPES.includes(selectedStatus)) {
-        matchesStatus = project.project_type === selectedStatus;
-      } else {
-        matchesStatus = project.status === selectedStatus;
-      }
+      matchesStatus = project.status === selectedStatus;
     }
 
+    // Filter by priority
     let matchesPriority = true;
     if (selectedPriority !== "All") {
       matchesPriority = project.priority === selectedPriority;
     }
 
-    return matchesSearch && matchesStatus && matchesPriority;
+    // Filter by channel
+    let matchesChannel = true;
+    if (selectedChannel !== "All") {
+      if (project.channel) {
+        matchesChannel = project.channel === selectedChannel;
+      } else {
+        // If no channel specified, only show when "unknown" is selected
+        matchesChannel = selectedChannel === "unknown";
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesPriority && matchesChannel;
   });
 
   const getCategorizedProjects = () => {
@@ -373,22 +346,37 @@ export default function ProjectsPage() {
     };
   };
 
-   const handleViewProject = (projectId: number) => {
-    router.push(`/Supervisor/Projects/${projectId}`);
+  // Get channel statistics - only Movie projects are in projectList now
+  const getChannelStats = () => {
+    const channelCounts: {[key: string]: number} = {};
+    
+    projectList.forEach(project => {
+      const channel = project.channel || "unknown";
+      channelCounts[channel] = (channelCounts[channel] || 0) + 1;
+    });
+    
+    return channelCounts;
   };
 
-   const handleEditProject = (projectId: number) => {
-    router.push(`/Supervisor/Projects/Movie/${projectId}`);
+  // Update the handleViewProject function to navigate to the project detail page
+  const handleViewProject = (projectId: number) => {
+    router.push(`/Admin/Projects/${projectId}`);
   };
 
-   const handleDeleteProject = async (projectId: number) => {
+  // Add a new function to handle edit navigation
+  const handleEditProject = (projectId: number) => {
+    router.push(`/Admin/Projects/Movie/${projectId}`);
+  };
+
+  // Handle deleting a project
+  const handleDeleteProject = async (projectId: number) => {
     try {
       setIsDeleting(true);
       const response = await Project.deleteProject(projectId);
       
       if (response.data.success) {
         toast.success("Project deleted successfully");
-        getProjects();  
+        refreshProjects(); // Refresh project list
         setDeletingProject(null);
       } else {
         toast.error(response.data.message || "Failed to delete project");
@@ -405,6 +393,7 @@ export default function ProjectsPage() {
     setSearchQuery("");
     setSelectedStatus("All");
     setSelectedPriority("All");
+    setSelectedChannel("All");
   };
 
    const DeleteConfirmModal = ({ project, onClose, onConfirm }: { project: any; onClose: () => void; onConfirm: () => void }) => {
@@ -417,34 +406,27 @@ export default function ProjectsPage() {
               onClick={onClose}
               className="p-1 rounded-full hover:bg-gray-100 transition-colors"
             >
-              <FiX size={20} className="text-gray-600" />
+              <FiX size={20} />
             </button>
           </div>
           
-          <div className="mb-6">
-            <div className="flex justify-center text-yellow-500 mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <p className="text-center mb-2">Are you sure you want to delete this project?</p>
-            <p className="text-center font-semibold">{project.name}</p>
-            <p className="text-center text-sm text-gray-500">This action cannot be undone.</p>
+          <div className="text-gray-600 mb-6">
+            Are you sure you want to delete the project <strong>"{project?.name}"</strong>? This action cannot be undone.
           </div>
           
-          <div className="flex justify-end gap-3">
+          <div className="flex gap-3 justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
               disabled={isDeleting}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center"
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
             >
-              {isDeleting ? 'Deleting...' : 'Delete Project'}
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </button>
           </div>
         </div>
@@ -452,41 +434,43 @@ export default function ProjectsPage() {
     );
   };
 
-   const resetImageStates = () => {
+  const resetImageStates = () => {
     setPreviewImage(null);
     setSelectedFile(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
-   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-       if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file');
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error("File size must be less than 5MB");
         return;
       }
       
-      console.log("Image selected:", file.name, "Size:", Math.round(file.size / 1024), "KB");
+      // Validate specific image types
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png", 
+        "image/jpg",
+        "image/gif"
+      ];
+      
+      if (!allowedTypes.includes(file.type)) {
+        toast.error("Please select a valid image file (JPEG, PNG, JPG, or GIF)");
+        return;
+      }
+      
       setSelectedFile(file);
       
+      // Create preview
       const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          console.log("Preview image created successfully");
-          setPreviewImage(event.target.result as string);
-        } else {
-          console.error("Failed to create preview");
-          toast.error("Failed to preview image");
-        }
-      };
-      reader.onerror = () => {
-        console.error("FileReader error:", reader.error);
-        toast.error("Error processing image");
+      reader.onload = (e) => {
+        setPreviewImage(e.target?.result as string);
       };
       reader.readAsDataURL(file);
-    } else {
-      setPreviewImage(null);
-      setSelectedFile(null);
     }
   };
 
@@ -496,188 +480,187 @@ export default function ProjectsPage() {
     }
   };
 
-   const handleAddProject = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleAddProject = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    
+    setIsSubmitting(true);
+
     try {
-      setIsSubmitting(true);
+      const formData = new FormData(event.currentTarget);
       
-      const form = event.target as HTMLFormElement;
-      const formData = new FormData();
+      // Validate required fields
+      const name = formData.get('name') as string;
+      const description = formData.get('description') as string;
+      const deadline = formData.get('deadline') as string;
+      const status = formData.get('status') as string;
+      const priority = formData.get('priority') as string;
+      const channel = formData.get('channel') as string;
+
+      if (!name || !description || !deadline || !status || !priority || !channel) {
+        toast.error("Please fill in all required fields");
+        return;
+      }
+
+      // Automatically set project_type to "Movie" for Movies page
+      formData.append('project_type', 'Movie');
       
-       const name = (form.elements.namedItem('name') as HTMLInputElement).value;
-      const deadline = (form.elements.namedItem('deadline') as HTMLInputElement).value;
-      const status = (form.elements.namedItem('status') as HTMLSelectElement).value;
-      const priority = (form.elements.namedItem('priority') as HTMLSelectElement).value;
-      const description = (form.elements.namedItem('description') as HTMLTextAreaElement).value;
+      // Add form data
+      formData.append('created_by', user?.id?.toString() || '');
       
-       formData.append('name', name);
-      formData.append('description', description);
-      formData.append('deadline', deadline);
-      formData.append('created_by', user?.id?.toString() || "");
-      formData.append('status', status);
-      formData.append('priority', priority);
-      formData.append('project_type', 'Movie');  
-      formData.append('progress', '0');  
-      
-       if (selectedFile) {
+      // Add image if selected
+      if (selectedFile) {
         formData.append('project_image', selectedFile);
       }
-      
-      console.log("Form data entries:", [...formData.entries()].map(entry => `${entry[0]}: ${entry[1]}`));
-      
+
       const response = await Project.createProject(formData);
       
       if (response.data.success) {
-        toast.success("Project created successfully");
-        
-         await getProjects();
-        
-         setShowAddModal(false);
+        toast.success("Project created successfully!");
+        setShowAddModal(false);
         resetImageStates();
+        if (formRef.current) {
+          formRef.current.reset();
+        }
+        refreshProjects(); // Refresh the projects list
       } else {
         toast.error(response.data.message || "Failed to create project");
       }
     } catch (error: any) {
+      console.error('Error creating project:', error);
       const message = error.response?.data?.message || "Failed to create project";
       toast.error(message);
-      console.error("Project creation error:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-   const AddProjectModal = ({ onClose }: { onClose: () => void }) => {
+  const AddProjectModal = ({ onClose }: { onClose: () => void }) => {
     return (
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-lg shadow-xl border border-gray-200 max-w-2xl w-full">
-        <div className="p-5">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-semibold text-gray-800">Add New Project</h2>
-            <button 
-              onClick={onClose}
-              className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              <FiX size={20} className="text-gray-600" />
-            </button>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-800">Add New Project</h2>
+              <button 
+                onClick={onClose}
+                className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
           </div>
           
-          <form ref={formRef} onSubmit={handleAddProject} className="space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-               <div className="md:col-span-1">
-                <div 
-                  onClick={handleImageClick}
-                  className="w-full aspect-video bg-gray-100 rounded-lg flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-gray-300 hover:bg-gray-50 mb-2"
-                >
-                  {previewImage ? (
-                    <div className="relative w-full h-full">
-                      <img 
-                        src={previewImage} 
-                        alt="Preview" 
+          <form ref={formRef} onSubmit={handleAddProject} className="p-4">
+            <div className="space-y-3">
+              {/* Project Image Upload */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Project Image</label>
+                <div className="mt-1">
+                  <div
+                    onClick={handleImageClick}
+                    className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors bg-gray-50"
+                  >
+                    {previewImage ? (
+                      <img
+                        src={previewImage}
+                        alt="Preview"
                         className="w-full h-full object-cover rounded-lg"
                       />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPreviewImage(null);
-                          setSelectedFile(null);
-                          if (fileInputRef.current) fileInputRef.current.value = '';
-                        }}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                      >
-                        <FiX size={16} />
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <FiImage size={40} className="text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-500">Upload Project Image</p>
-                      <p className="text-xs text-gray-400 mt-1">Click to browse</p>
-                    </>
-                  )}
+                    ) : (
+                      <div className="text-center">
+                        <FiImage className="mx-auto h-8 w-8 text-gray-400" />
+                        <p className="mt-1 text-xs text-gray-500">Click to upload image</p>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/jpg,image/gif"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
                 </div>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageChange}
-                  accept="image/*"
-                  className="hidden"
-                />
-                <p className="text-xs text-gray-500 text-center">Recommended size: 1280x720px</p>
               </div>
               
-               <div className="md:col-span-2">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Project Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      required
-                      placeholder="Enter project name"
-                      className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Deadline</label>
-                    <input
-                      type="date"
-                      name="deadline"
-                      required
-                      className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
-                    <select
-                      name="status"
-                      required
-                      defaultValue="Pending"
-                      className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
-                    >
-                      {PROJECT_STATUSES.filter(status => status !== "All").map(status => (
-                        <option key={status} value={status}>{status}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Priority</label>
-                    <select
-                      name="priority"
-                      required
-                      defaultValue="Medium"
-                      className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
-                    >
-                      {PROJECT_PRIORITIES.filter(priority => priority !== "All").map(priority => (
-                        <option key={priority} value={priority}>{priority}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Project Type</label>
-                    <div className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-gray-50 text-gray-700">
-                    Movie
-                    </div>
-                    <input type="hidden" name="project_type" value="Movie" />
-                  </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Project Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  placeholder="Enter project name"
+                  className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Channel</label>
+                <select
+                  name="channel"
+                  required
+                  className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                >
+                  {availableChannels.length > 0 ? (
+                    availableChannels.map(channel => (
+                      <option key={channel} value={channel}>
+                        {channel === "unknown" ? "Unknown" : channel}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="Astaan Films">Astaan Films</option>
+                  )}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Deadline</label>
+                <input
+                  type="date"
+                  name="deadline"
+                  required
+                  className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                  <select
+                    name="status"
+                    required
+                    defaultValue="Pending"
+                    className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  >
+                    {PROJECT_STATUSES.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
                 </div>
                 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
-                  <textarea
-                    name="description"
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Priority</label>
+                  <select
+                    name="priority"
                     required
-                    placeholder="Enter project description"
-                    rows={3}
+                    defaultValue="Medium"
                     className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
-                  ></textarea>
+                  >
+                    {PROJECT_PRIORITIES.map(priority => (
+                      <option key={priority} value={priority}>{priority}</option>
+                    ))}
+                  </select>
                 </div>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                <textarea
+                  name="description"
+                  required
+                  placeholder="Enter project description"
+                  rows={3}
+                  className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                ></textarea>
               </div>
             </div>
             
@@ -704,6 +687,33 @@ export default function ProjectsPage() {
     );
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <LoadingReuse />
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="text-center py-12">
+          <div className="text-red-500 text-lg font-medium mb-2">Error loading projects</div>
+          <div className="text-gray-600 mb-4">{error}</div>
+          <button 
+            onClick={() => refreshProjects()}
+            className="px-4 py-2 bg-[#ff4e00] text-white rounded-lg hover:bg-[#ff4e00]/90 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -716,9 +726,17 @@ export default function ProjectsPage() {
           <div>
             <h1 className="text-3xl font-bold mb-2 text-gray-800 flex items-center">
               <FiLayers className="mr-3 text-[#ff4e00]" size={32} />
-              <span>All Movie</span>
+              <span>Movies Dubbing</span>
             </h1>
-           
+            <div className="flex items-center gap-3 text-gray-600">
+              <span className="text-lg font-medium">
+                {selectedChannel === "All" ? "All Channels" : 
+                 (selectedChannel === "unknown" ? "Unknown" : selectedChannel)}
+              </span>
+              <span className="bg-[#ff4e00] text-white px-3 py-1 rounded-full text-sm font-semibold">
+                {filteredProjects.length} Projects
+              </span>
+            </div>
           </div>
           <motion.button
             whileHover={{ scale: 1.03 }}
@@ -727,11 +745,12 @@ export default function ProjectsPage() {
             onClick={() => setShowAddModal(true)}
           >
             <FiPlus size={18} />
-            <span>Add New Movie</span>
+            <span>Add New Project</span>
           </motion.button>
         </div>
 
-         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+        {/* Improved search and filter bar */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-grow relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -749,13 +768,27 @@ export default function ProjectsPage() {
             <div className="flex gap-3">
               <select
                 className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent transition-all bg-white min-w-[140px]"
+                value={selectedChannel}
+                onChange={(e) => setSelectedChannel(e.target.value)}
+              >
+                <option value="All">All Channels</option>
+                {availableChannels.map(channel => (
+                  <option key={channel} value={channel}>
+                    {channel === "unknown" ? "Unknown" : channel}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent transition-all bg-white min-w-[140px]"
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
               >
                 <option value="All">All Status</option>
-                <option value="Pending">Pending</option>
+                <option value="Planning">Planning</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Completed">Completed</option>
+                <option value="Pending">Pending</option>
               </select>
               
               <select
@@ -779,15 +812,20 @@ export default function ProjectsPage() {
           </div>
         </div>
 
-         <div className="flex gap-6 overflow-x-auto mt-6">
+        {/* Kanban Board Layout: 4 categories with new order */}
+        <div className="flex gap-6 overflow-x-auto mt-6">
           {[
-            { key: "Pending", label: "PENDING", color: "text-yellow-600 bg-yellow-50 border-t-2 border-yellow-400" },
-            { key: "In Progress", label: "IN PROGRESS", color: "text-blue-600 bg-blue-50 border-t-2 border-blue-400" },
-            { key: "Completed", label: "COMPLETED", color: "text-green-600 bg-green-50 border-t-2 border-green-400" },
+            { key: "Planning", label: "PLANNING", color: "text-purple-600 bg-purple-50 border-t-2 border-purple-400", countColor: "text-purple-600" },
+            { key: "In Progress", label: "IN PROGRESS", color: "text-blue-600 bg-blue-50 border-t-2 border-blue-400", countColor: "text-blue-600" },
+            { key: "Completed", label: "COMPLETED", color: "text-green-600 bg-green-50 border-t-2 border-green-400", countColor: "text-green-600" },
+            { key: "Pending", label: "PENDING", color: "text-yellow-600 bg-yellow-50 border-t-2 border-yellow-400", countColor: "text-yellow-600" },
           ].map(column => (
             <div key={column.key} className="flex-1 min-w-[320px]">
               <div className={`flex items-center gap-2 mb-2 justify-center p-2 rounded-t-lg ${column.color}`}>
                 <span className="font-bold text-2xl uppercase">{column.label}</span>
+                <span className={`bg-white px-2 py-1 rounded-full text-sm font-bold ${column.countColor}`}>
+                  {filteredProjects.filter(p => p.status === column.key).length}
+                </span>
               </div>
               <div className="space-y-4">
                 {filteredProjects.filter(p => p.status === column.key).length === 0 ? (
@@ -805,11 +843,12 @@ export default function ProjectsPage() {
                       />
                     ))
                 )}
-                 <button
+                {/* Add New Button */}
+                <button
                   className="w-full mt-2 py-2 border border-dashed rounded text-gray-400 hover:bg-gray-50"
                   onClick={() => setShowAddModal(true)}
                 >
-                  + Add New
+                  + Add New Project
                 </button>
               </div>
             </div>
@@ -817,7 +856,8 @@ export default function ProjectsPage() {
         </div>
       </div>
       
-       {deletingProject && (
+      {/* Modals */}
+      {deletingProject && (
         <DeleteConfirmModal 
           project={deletingProject}
           onClose={() => setDeletingProject(null)}
@@ -830,6 +870,25 @@ export default function ProjectsPage() {
           onClose={() => setShowAddModal(false)}
         />
       )}
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center items-center gap-4 mt-8">
+        <button
+          className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={!hasPrevious || page === 1}
+        >
+          Previous
+        </button>
+        <span className="font-medium">Page {currentPage} of {totalPages}</span>
+        <button
+          className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+          onClick={() => setPage((p) => p + 1)}
+          disabled={!hasNext || page === totalPages}
+        >
+          Next
+        </button>
+      </div>
     </motion.div>
   );
 }

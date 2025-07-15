@@ -20,6 +20,7 @@ import {
   FiCheck,
 } from "react-icons/fi";
 import userAuth from "@/myStore/userAuth";
+import useSWR from 'swr';
 
 interface Subtask {
   id: number;
@@ -66,7 +67,7 @@ const getStatusColor = (status: string) => {
 
 const getRoleColor = (role: string) => {
   switch (role) {
-    case "Supervisor":
+    case "Admin":
       return "bg-purple-100 text-purple-800";
     case "Supervisor":
       return "bg-indigo-100 text-indigo-800";
@@ -214,6 +215,21 @@ export default function Page() {
   const taskService = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
   const userService = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
 
+  // SWR fetcher for users
+  const fetcher = (url: string) => fetch(url).then(res => res.json());
+  const { data: usersData } = useSWR(
+    `${userService}/api/auth/users`,
+    fetcher
+  );
+
+  // Set users state from SWR
+  useEffect(() => {
+    if (usersData) {
+      const users = usersData.users || usersData;
+      setUsers(Array.isArray(users) ? users.filter(u => u.role !== 'Admin' && u.role !== 'Supervisor') : []);
+    }
+  }, [usersData]);
+
   const fetchSubtasks = async () => {
     if (!id) {
       setLoading(false);
@@ -223,11 +239,9 @@ export default function Page() {
     try {
       setLoading(true);
 
-      console.log("Fetching subtasks for task ID:", id);
-
       try {
         const res = await axios.get(`${taskService}/api/subtasks/task/${id}`);
-        console.log("API Response:", res.data);
+       // console.log("API Response:", res.data);
 
         if (!res.data || !Array.isArray(res.data)) {
           console.log(
@@ -336,31 +350,9 @@ export default function Page() {
     }
   };
 
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get(`${userService}/api/auth/users`);
-
-      const users = response.data.users || response.data;
-
-      if (Array.isArray(users)) {
-        const filteredUsers = users.filter(
-          (user: any) => user.role !== "Supervisor" && user.role !== "Supervisor"
-        );
-        setUsers(filteredUsers);
-      } else {
-        console.error("Invalid users data format:", response.data);
-        toast.error("Failed to load users: Invalid data format");
-      }
-    } catch (error: any) {
-      console.error("Error fetching users:", error);
-      toast.error("Failed to load users");
-    }
-  };
-
   useEffect(() => {
     if (id) {
       fetchSubtasks();
-      fetchUsers();
     }
   }, [id]);
 

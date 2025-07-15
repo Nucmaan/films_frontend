@@ -18,8 +18,9 @@ import {
   FiEye,
   FiImage,
 } from "react-icons/fi";
-import LoadingReuse from "@/components/LoadingReuse";
-import userAuth from "@/myStore/userAuth";
+ import userAuth from "@/myStore/userAuth";
+import { useProject, useProjectTasks, useProjectUsers } from '@/lib/itsMe/page.js';
+
 
  const getStatusColor = (status: string) => {
   switch (status) {
@@ -141,20 +142,46 @@ const simpleDateFormat = (dateString: string) => {
 
 export default function ProjectDetail({ params }: { params: any }) {
   const router = useRouter();
-   const paramsObj = React.use(params) as { id: string };
-  const id = paramsObj.id;
+  const id = params.id;
 
-  const [loading, setLoading] = useState(true);
-  const [project, setProject] = useState<any>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [page, setPage] = useState(1);
+
+  const projectService = process.env.NEXT_PUBLIC_PROJECT_SERVICE_URL;
+  const taskService = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
+  const userService = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
+
+  // SWR hooks
+  const { project, success: projectSuccess, error: projectError, isLoading: projectLoading, mutate: mutateProject } = useProject(id, projectService);
+  const {
+    tasks,
+    total,
+    page: currentPage = 1,
+    pageSize,
+    totalPages = 1,
+    hasNext = false,
+    hasPrevious = false,
+    success: tasksSuccess,
+    error: tasksError,
+    isLoading: tasksLoading,
+    mutate: mutateTasks
+  } = useProjectTasks(id, taskService, page);
+  const { users, error: usersError, isLoading: usersLoading, mutate: mutateUsers } = useProjectUsers(userService);
+
+  // Remove useEffect and useState for fetching project, tasks, users
+  // Keep useState for UI state (form, modal, etc.)
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [isCreatingTask, setIsCreatingTask] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+  const [taskFile, setTaskFile] = useState<File | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<number | null>(null);
+  const [isUpdatingTask, setIsUpdatingTask] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+  const [editTaskFile, setEditTaskFile] = useState<File | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [daysInfo, setDaysInfo] = useState({ days: 0, overdue: false });
+  const [isDeleting, setIsDeleting] = useState(false);
   const user = userAuth((state) => state.user);
 
+  // New task state
   const [newTask, setNewTask] = useState<{
     title: string;
     description: string;
@@ -170,13 +197,8 @@ export default function ProjectDetail({ params }: { params: any }) {
     deadline: "",
     estimated_hours: 0,
   });
-  
-  const [taskFile, setTaskFile] = useState<File | null>(null);
-  const [showNewTaskForm, setShowNewTaskForm] = useState(false);
-  const [deletingTaskId, setDeletingTaskId] = useState<number | null>(null);
-  const [isUpdatingTask, setIsUpdatingTask] = useState(false);
-  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
-  
+
+  // Edit task state
   const [editTask, setEditTask] = useState<{
     title: string;
     description: string;
@@ -193,146 +215,7 @@ export default function ProjectDetail({ params }: { params: any }) {
     estimated_hours: 0,
   });
 
-  const [editTaskFile, setEditTaskFile] = useState<File | null>(null);
-
-  const projectService = process.env.NEXT_PUBLIC_PROJECT_SERVICE_URL;
-  const taskService = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
-  const userService = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
-
-   const fetchUsers = async () => {
-    try {
-      const response = await axios.get(`${userService}/api/auth/users`);
-
-       const users = response.data.users || response.data;
-      
-       if (Array.isArray(users)) {
-        const filteredUsers = users.filter((user: any) => 
-          user.role !== 'Admin' && user.role !== 'Supervisor'
-        );
-        setUsers(filteredUsers);
-      } else {
-        console.error('Invalid users data format:', response.data);
-        toast.error('Failed to load users: Invalid data format');
-      }
-    } catch (error: any) {
-      console.error('Error fetching users:', error);
-      toast.error('Failed to load users');
-    }
-  };
-
-   useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
-    const fetchProject = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(
-          `${projectService}/api/project/singleProject/${id}`
-        );
-
-        if (response.data.success) {
-          const projectData = response.data.project;
-          setProject(projectData);
-
-           const daysData = calculateDaysLeft(projectData.deadline);
-          setDaysInfo(daysData);
-
-           fetchTasks(id);
-        } else {
-          toast.error("Failed to load project details");
-          router.push("/Supervisor/Projects");
-        }
-      } catch (error: any) {
-        toast.error(
-          "Error loading project: " +
-            (error.response?.data?.message || error.message)
-        );
-        router.push("/Supervisor/Projects");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProject();
-  }, [id, projectService, router]);
-
-   const fetchTasks = async (projectId: string) => {
-    try {
-      const response = await axios.get(
-        `${taskService}/api/task/projectTasks/${projectId}`
-      );
-
-      if (response.data.success) {
-         const tasksFromApi = response.data.tasks ? response.data.tasks.map((task: any) => ({
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          priority: task.priority,
-          deadline: task.deadline,
-          estimated_hours: task.estimated_hours,
-          file_url: task.file_url,
-          completed_at: task.completed_at,
-          subtasks: [],  
-        })) : [];
-
-        setTasks(tasksFromApi as Task[]);
-      } else {
-        setTasks([]);
-      }
-    } catch (error: any) {
-       if (error.response?.status === 404 || error.response?.data?.message?.includes("No tasks found")) {
-        setTasks([]);
-      } else {
-         toast.error(
-          "Error loading tasks: " +
-            (error.response?.data?.message || error.message)
-        );
-      }
-    }
-  };
-
-   const handleDeleteProject = async () => {
-    try {
-      setIsDeleting(true);
-      const response = await axios.delete(
-        `${projectService}/api/project/projectDelete/${id}`
-      );
-
-      if (response.data.success) {
-        toast.success("Project deleted successfully");
-        router.push("/Supervisor/Projects");
-      } else {
-        toast.error(response.data.message || "Failed to delete project");
-        setIsDeleting(false);
-      }
-    } catch (error: any) {
-      const message =
-        error.response?.data?.message || "Failed to delete project";
-      toast.error(message);
-      setIsDeleting(false);
-    }
-  };
-
-  
-  const filteredTasks = useMemo(() => {
-    if (selectedStatus === "All") {
-      return tasks;
-    }
-    return tasks.filter(task => task.status === selectedStatus);
-  }, [tasks, selectedStatus]);
-
-  const getStatusCount = (status: string) => {
-    return tasks.filter(task => task.status === status).length;
-  };
-
-  const getTotalCount = () => {
-    return tasks.length;
-  };
-
-  
+  // Remove useEffect for clearing new task form, use useEffect only for UI state
   useEffect(() => {
     if (!showNewTaskForm) {
       setTaskFile(null);
@@ -347,10 +230,50 @@ export default function ProjectDetail({ params }: { params: any }) {
     }
   }, [showNewTaskForm]);
 
+  // Remove all fetchProject, fetchTasks, fetchUsers, and related useEffects
+  // Use SWR's loading/error states for UI
+  const loading = projectLoading || tasksLoading || usersLoading;
+  const error = projectError || tasksError || usersError;
+
+  // For create/update/delete, use mutateTasks() to revalidate tasks after action
+  // For project delete, use mutateProject() if needed
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[70vh]">
-        <LoadingReuse />
+      <div className="w-full mx-auto py-5 px-4 sm:px-4 lg:px-4 min-h-screen bg-gray-50">
+        {/* Skeleton for header/back button */}
+        <div className="mb-6 animate-pulse">
+          <div className="h-10 w-40 bg-gray-200 rounded mb-4" />
+        </div>
+        {/* Skeleton for project info */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8 animate-pulse">
+          <div className="h-8 w-64 bg-gray-200 rounded mb-4" />
+          <div className="h-4 w-40 bg-gray-100 rounded mb-2" />
+          <div className="h-4 w-80 bg-gray-100 rounded mb-2" />
+          <div className="h-4 w-56 bg-gray-100 rounded mb-2" />
+        </div>
+        {/* Skeleton for task columns */}
+        <div className="grid grid-cols-4 gap-6 mt-6">
+          {[...Array(4)].map((_, idx) => (
+            <div key={idx} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm animate-pulse">
+              {/* Column title */}
+              <div className="h-6 w-32 bg-gray-200 rounded mb-4" />
+              {/* Skeleton cards for tasks */}
+              {[...Array(2)].map((_, tIdx) => (
+                <div key={tIdx} className="mb-6">
+                  <div className="h-44 w-full bg-gray-100 rounded mb-3" />
+                  <div className="h-4 w-24 bg-gray-200 rounded mb-2" />
+                  <div className="h-3 w-40 bg-gray-100 rounded mb-2" />
+                  <div className="h-3 w-32 bg-gray-100 rounded mb-2" />
+                  <div className="flex gap-2 mt-2">
+                    <div className="h-6 w-16 bg-gray-100 rounded" />
+                    <div className="h-6 w-16 bg-gray-100 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -370,7 +293,7 @@ export default function ProjectDetail({ params }: { params: any }) {
             permission to view it.
           </p>
           <button
-            onClick={() => router.push("/Supervisor/Projects")}
+            onClick={() => router.push("/Admin/Projects")}
             className="inline-flex items-center px-6 py-3 rounded-lg text-white bg-[#ff4e00] hover:bg-[#ff4e00]/90 transition-all font-medium shadow-sm"
           >
             <FiArrowLeft className="mr-2" /> Back to Projects
@@ -380,13 +303,13 @@ export default function ProjectDetail({ params }: { params: any }) {
     );
   }
 
-   const { days, overdue } = daysInfo;
+   const { days, overdue } = calculateDaysLeft(project.deadline);
 
   return (
     <div className="w-full mx-auto py-5 px-4 sm:px-4 lg:px-4">
        <div className="mb-6">
         <button
-          onClick={() => router.push('/Supervisor/Projects')}
+          onClick={() => router.push('/Admin/Projects')}
           className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff4e00] transition-colors"
         >
           <FiArrowLeft className="w-4 h-4 mr-2" />
@@ -640,7 +563,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                               setTaskFile(null);
                               setShowNewTaskForm(false);
 
-                              fetchTasks(id);
+                              mutateTasks(); // Re-fetch tasks
                             } else {
                               toast.error(
                                 response.data.message ||
@@ -702,12 +625,12 @@ export default function ProjectDetail({ params }: { params: any }) {
                   <div className="flex items-center mb-5">
                     <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2.5"></div>
                     <h3 className="font-medium text-gray-800">To Do</h3>
-                    <span className="ml-1.5 text-gray-500">{getStatusCount("To Do")}</span>
+                    <span className="ml-1.5 text-gray-500">{tasks?.filter((task: Task) => task.status === "To Do").length || 0}</span>
                   </div>
                   
-                  {tasks.filter(task => task.status === "To Do").length > 0 ? (
+                  {tasks?.filter((task: Task) => task.status === "To Do").length > 0 ? (
                     <div>
-                      {tasks.filter(task => task.status === "To Do").map(task => (
+                      {tasks?.filter((task: Task) => task.status === "To Do").map((task: Task) => (
                         <div key={task.id} className="border border-gray-200 rounded-xl mb-4 bg-white overflow-hidden shadow-sm hover:shadow transition-shadow">
                           <div className="h-44 bg-gray-100 relative rounded-t-xl overflow-hidden">
                             {task.file_url ? (
@@ -761,7 +684,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                             
                             <div className="flex justify-between items-center border-t border-gray-100 pt-3 mt-3">
                               <button
-                                onClick={() => router.push(`/Supervisor/Projects/SubTasks/${task.id}`)}
+                                onClick={() => router.push(`/Admin/Projects/SubTasks/${task.id}`)}
                                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                               >
                                 View Task
@@ -770,7 +693,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                               <div className="flex space-x-3">
                                 <button
                                   onClick={() => {
-                                    const taskToEdit = tasks.find(t => t.id === task.id);
+                                    const taskToEdit = tasks?.find((t: Task) => t.id === task.id);
                                     if (taskToEdit) {
                                       setEditTask({
                                         title: taskToEdit.title,
@@ -797,7 +720,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
-                                            fetchTasks(id);
+                                            mutateTasks(); // Re-fetch tasks
                                           }
                                         })
                                         .catch(error => {
@@ -829,12 +752,12 @@ export default function ProjectDetail({ params }: { params: any }) {
                   <div className="flex items-center mb-5">
                     <div className="w-3 h-3 rounded-full bg-blue-500 mr-2.5"></div>
                     <h3 className="font-medium text-gray-800">In Progress</h3>
-                    <span className="ml-1.5 text-gray-500">{getStatusCount("In Progress")}</span>
+                    <span className="ml-1.5 text-gray-500">{tasks?.filter((task: Task) => task.status === "In Progress").length || 0}</span>
                   </div>
                   
-                  {tasks.filter(task => task.status === "In Progress").length > 0 ? (
+                  {tasks?.filter((task: Task) => task.status === "In Progress").length > 0 ? (
                     <div>
-                      {tasks.filter(task => task.status === "In Progress").map(task => (
+                      {tasks?.filter((task: Task) => task.status === "In Progress").map((task: Task) => (
                         <div key={task.id} className="border border-gray-200 rounded-xl mb-4 bg-white overflow-hidden shadow-sm hover:shadow transition-shadow">
                           <div className="h-44 bg-gray-100 relative rounded-t-xl overflow-hidden">
                             {task.file_url ? (
@@ -888,7 +811,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                             
                              <div className="flex justify-between items-center border-t border-gray-100 pt-3 mt-3">
                               <button
-                                onClick={() => router.push(`/Supervisor/Projects/SubTasks/${task.id}`)}
+                                onClick={() => router.push(`/Admin/Projects/SubTasks/${task.id}`)}
                                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                               >
                                 View Task
@@ -897,7 +820,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                               <div className="flex space-x-3">
                                 <button
                                   onClick={() => {
-                                    const taskToEdit = tasks.find(t => t.id === task.id);
+                                    const taskToEdit = tasks?.find((t: Task) => t.id === task.id);
                                     if (taskToEdit) {
                                       setEditTask({
                                         title: taskToEdit.title,
@@ -924,7 +847,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
-                                            fetchTasks(id);
+                                            mutateTasks(); // Re-fetch tasks
                                           }
                                         })
                                         .catch(error => {
@@ -956,12 +879,12 @@ export default function ProjectDetail({ params }: { params: any }) {
                   <div className="flex items-center mb-5">
                     <div className="w-3 h-3 rounded-full bg-purple-500 mr-2.5"></div>
                     <h3 className="font-medium text-gray-800">Review</h3>
-                    <span className="ml-1.5 text-gray-500">{getStatusCount("Review")}</span>
+                    <span className="ml-1.5 text-gray-500">{tasks?.filter((task: Task) => task.status === "Review").length || 0}</span>
                   </div>
                   
-                  {tasks.filter(task => task.status === "Review").length > 0 ? (
+                  {tasks?.filter((task: Task) => task.status === "Review").length > 0 ? (
                     <div>
-                      {tasks.filter(task => task.status === "Review").map(task => (
+                      {tasks?.filter((task: Task) => task.status === "Review").map((task: Task) => (
                         <div key={task.id} className="border border-gray-200 rounded-xl mb-4 bg-white overflow-hidden shadow-sm hover:shadow transition-shadow">
                            <div className="h-44 bg-gray-100 relative rounded-t-xl overflow-hidden">
                             {task.file_url ? (
@@ -1015,7 +938,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                             
                              <div className="flex justify-between items-center border-t border-gray-100 pt-3 mt-3">
                               <button
-                                onClick={() => router.push(`/Supervisor/Projects/SubTasks/${task.id}`)}
+                                onClick={() => router.push(`/Admin/Projects/SubTasks/${task.id}`)}
                                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                               >
                                 View Task
@@ -1024,7 +947,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                               <div className="flex space-x-3">
                                 <button
                                   onClick={() => {
-                                    const taskToEdit = tasks.find(t => t.id === task.id);
+                                    const taskToEdit = tasks?.find((t: Task) => t.id === task.id);
                                     if (taskToEdit) {
                                       setEditTask({
                                         title: taskToEdit.title,
@@ -1051,7 +974,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
-                                            fetchTasks(id);
+                                            mutateTasks(); // Re-fetch tasks
                                           }
                                         })
                                         .catch(error => {
@@ -1083,12 +1006,12 @@ export default function ProjectDetail({ params }: { params: any }) {
                   <div className="flex items-center mb-5">
                     <div className="w-3 h-3 rounded-full bg-green-500 mr-2.5"></div>
                     <h3 className="font-medium text-gray-800">Completed</h3>
-                    <span className="ml-1.5 text-gray-500">{getStatusCount("Completed")}</span>
+                    <span className="ml-1.5 text-gray-500">{tasks?.filter((task: Task) => task.status === "Completed").length || 0}</span>
                   </div>
                   
-                  {tasks.filter(task => task.status === "Completed").length > 0 ? (
+                  {tasks?.filter((task: Task) => task.status === "Completed").length > 0 ? (
                     <div>
-                      {tasks.filter(task => task.status === "Completed").map(task => (
+                      {tasks?.filter((task: Task) => task.status === "Completed").map((task: Task) => (
                         <div key={task.id} className="border border-gray-200 rounded-xl mb-4 bg-white overflow-hidden shadow-sm hover:shadow transition-shadow">
                            <div className="h-44 bg-gray-100 relative rounded-t-xl overflow-hidden">
                             {task.file_url ? (
@@ -1142,7 +1065,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                             
                              <div className="flex justify-between items-center border-t border-gray-100 pt-3 mt-3">
                               <button
-                                onClick={() => router.push(`/Supervisor/Projects/SubTasks/${task.id}`)}
+                                onClick={() => router.push(`/Admin/Projects/SubTasks/${task.id}`)}
                                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                               >
                                 View Task
@@ -1151,7 +1074,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                               <div className="flex space-x-3">
                                 <button
                                   onClick={() => {
-                                    const taskToEdit = tasks.find(t => t.id === task.id);
+                                    const taskToEdit = tasks?.find((t: Task) => t.id === task.id);
                                     if (taskToEdit) {
                                       setEditTask({
                                         title: taskToEdit.title,
@@ -1178,7 +1101,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
-                                            fetchTasks(id);
+                                            mutateTasks(); // Re-fetch tasks
                                           }
                                         })
                                         .catch(error => {
@@ -1209,6 +1132,25 @@ export default function ProjectDetail({ params }: { params: any }) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Pagination Controls for Tasks */}
+      <div className="flex justify-center items-center gap-4 mt-8">
+        <button
+          className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+          onClick={() => setPage((p: number) => Math.max(1, p - 1))}
+          disabled={!hasPrevious || page === 1}
+        >
+          Previous
+        </button>
+        <span className="font-medium">Page {currentPage} of {totalPages}</span>
+        <button
+          className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+          onClick={() => setPage((p: number) => p + 1)}
+          disabled={!hasNext || page === totalPages}
+        >
+          Next
+        </button>
       </div>
 
        {showDeleteConfirm && (
@@ -1253,7 +1195,28 @@ export default function ProjectDetail({ params }: { params: any }) {
                 Cancel
               </button>
               <button
-                onClick={handleDeleteProject}
+                onClick={async () => {
+                  setIsDeleting(true);
+                  try {
+                    const response = await axios.delete(
+                      `${projectService}/api/project/projectDelete/${id}`
+                    );
+
+                    if (response.data.success) {
+                      toast.success("Project deleted successfully");
+                      router.push("/Admin/Projects");
+                      mutateProject(); // Re-fetch project
+                    } else {
+                      toast.error(response.data.message || "Failed to delete project");
+                    }
+                  } catch (error: any) {
+                    const message =
+                      error.response?.data?.message || "Failed to delete project";
+                    toast.error(message);
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
                 disabled={isDeleting}
                 className="px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center shadow-sm font-medium"
               >
@@ -1427,7 +1390,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                     Update Attachment
                   </label>
                   {editingTaskId && (() => {
-                    const currentTask = tasks.find(t => t.id === editingTaskId);
+                    const currentTask = tasks?.find((t: Task) => t.id === editingTaskId);
                     return currentTask?.file_url ? (
                       <div className="text-sm text-gray-600 flex items-center bg-gray-50 p-2 rounded-md">
                         <FiFile className="mr-2 text-gray-500" />
@@ -1522,7 +1485,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                     if (response.data && response.data.success) {
                       toast.success("Task updated successfully");
 
-                       fetchTasks(id);
+                       mutateTasks(); // Re-fetch tasks
 
                        setEditingTaskId(null);
                       setEditTaskFile(null);
@@ -1531,7 +1494,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                         response.data?.message || "Failed to update task"
                       );
 
-                       const updatedTasks = tasks.map((t) => {
+                       const updatedTasks = tasks?.map((t: Task) => {
                         if (t.id === editingTaskId) {
                           return {
                             ...t,
@@ -1556,7 +1519,9 @@ export default function ProjectDetail({ params }: { params: any }) {
                         return t;
                       });
 
-                      setTasks(updatedTasks as Task[]);
+                      // Update the tasks state directly if mutateTasks doesn't update it
+                      // This might be necessary if mutateTasks doesn't re-render the component
+                      // For now, rely on mutateTasks to re-fetch and update the list
                     }
                   } catch (error: any) {
                     toast.error(

@@ -12,7 +12,7 @@ import userAuth from "@/myStore/userAuth";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Project from "@/service/Project";
-import { useDocumentaryProjects } from "@/lib/project/documentary";
+import { useDramaProjects } from "@/lib/project/drama";
 
 const PROJECT_STATUSES = ["Pending", "In Progress", "Completed", "Planning"];
 const PROJECT_PRIORITIES = ["Low", "Medium", "High"];
@@ -30,8 +30,8 @@ export default function EditProjectPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Use SWR hook to get Documentary projects
-  const { projects: documentaryProjects } = useDocumentaryProjects();
+  // Use SWR hook to get DRAMA projects
+  const { projects: dramaProjects } = useDramaProjects();
 
   // Fetch the project data
   const fetchProject = async () => {
@@ -46,9 +46,9 @@ export default function EditProjectPage() {
         console.log('Project data successfully loaded:', projectData);
         
         // Verify this is a Movie project
-        if (projectData.project_type !== "Documentary") {
-          toast.error("This project is not a Documentary project");
-          router.push('/Admin/Projects/Documentary');
+        if (projectData.project_type !== "DRAMA") {
+          toast.error("This project is not a DRAMA project");
+          router.push('/Admin/Projects/DRAMA');
           return;
         }
         
@@ -74,14 +74,14 @@ export default function EditProjectPage() {
         console.error('Failed to load project. Response:', response);
         toast.error("Failed to load project");
         setTimeout(() => {
-          router.push('/Admin/Projects/Documentary');
+          router.push('/Admin/Projects/DRAMA');
         }, 1500);
       }
     } catch (error: any) {
       const message = error.response?.data?.message || "Error loading project";
       toast.error(message);
       setTimeout(() => {
-        router.push('/Admin/Projects/Documentary');
+        router.push('/Admin/Projects/DRAMA');
       }, 1500);
     } finally {
       // Removed loading state
@@ -95,15 +95,15 @@ export default function EditProjectPage() {
     }
   }, [id]);
 
-  // Extract available channels from documentaryProjects
+  // Extract available channels from dramaProjects
   useEffect(() => {
-    if (documentaryProjects && documentaryProjects.length > 0) {
-      const uniqueChannels = [...new Set(documentaryProjects.map((project: any) => 
+    if (dramaProjects && dramaProjects.length > 0) {
+      const uniqueChannels = [...new Set(dramaProjects.map((project: any) => 
         project.channel || "unknown"
       ))].sort() as string[];
       setAvailableChannels(uniqueChannels);
     }
-  }, [documentaryProjects]);
+  }, [dramaProjects]);
 
   // Reset image states
   const resetImageStates = () => {
@@ -179,7 +179,7 @@ export default function EditProjectPage() {
       formData.append('deadline', deadlineInput); 
       formData.append('status', status);
       formData.append('priority', priority);
-      formData.append('project_type', 'Documentary'); // Always set to Movie
+      formData.append('project_type', 'DRAMA'); // Always set to Movie
       formData.append('channel', channel);
       formData.append('progress', progress);
       formData.append('description', description);
@@ -207,7 +207,7 @@ export default function EditProjectPage() {
       
       if (response.data.success) {
         toast.success("Project updated successfully");
-        router.push('/Admin/Projects/Documentary');
+        router.push('/Admin/Projects/DRAMA');
       } else {
         toast.error(response.data.message || "Failed to update project");
       }
@@ -227,10 +227,10 @@ export default function EditProjectPage() {
       <div className="flex flex-col items-center justify-center min-h-screen">
         <h1 className="text-2xl font-bold mb-4">Project not found</h1>
         <button
-          onClick={() => router.push('/Admin/Projects/Documentary')}
+          onClick={() => router.push('/Admin/Projects/DRAMA')}
           className="px-4 py-2 bg-[#ff4e00] text-white rounded-md hover:bg-[#ff4e00]/90 transition-colors"
         >
-          Back to Documentary
+          Back to DRAMA
         </button>
       </div>
     );
@@ -245,15 +245,15 @@ export default function EditProjectPage() {
     >
       <div className="mb-6">
         <button
-          onClick={() => router.push('/Admin/Projects/Documentary')}
+          onClick={() => router.push('/Admin/Projects/DRAMA')}
           className="mb-6 flex items-center gap-2 text-gray-600 hover:text-[#ff4e00] transition-colors"
         >
           <FiArrowLeft />
-          <span>Back to Documentary Projects</span>
+          <span>Back to DRAMA Projects</span>
         </button>
 
-        <h1 className="text-2xl font-bold mb-2 text-gray-800">Edit Documentary Project: {project.name}</h1>
-        <p className="text-gray-500">Make changes to your Documentary project details</p>
+        <h1 className="text-2xl font-bold mb-2 text-gray-800">Edit DRAMA Project: {project.name}</h1>
+        <p className="text-gray-500">Make changes to your DRAMA project details</p>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -419,7 +419,7 @@ export default function EditProjectPage() {
           <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-gray-200">
             <button
               type="button"
-              onClick={() => router.push('/Admin/Projects/Documentary')}
+              onClick={() => router.push('/Admin/Projects/DRAMA')}
               disabled={isSubmitting}
               className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
             >

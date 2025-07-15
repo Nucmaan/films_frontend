@@ -10,8 +10,8 @@ import userAuth from "@/myStore/userAuth";
 import { motion } from "framer-motion";
 import Project from "@/service/Project";
 import Image from "next/image";
-import { useDocumentaryProjects } from "@/lib/project/documentary";
-
+import { useDramaProjects } from "@/lib/project/drama"; 
+ 
 const PROJECT_STATUSES = ["Pending", "In Progress", "Completed", "Planning"];
 const PROJECT_PRIORITIES = [ "Low", "Medium", "High"];
 
@@ -274,7 +274,7 @@ export default function ProjectsPage() {
 
   // Use paginated SWR hook
   const {
-    projects: documentaryProjects,
+    projects: dramaProjects,
     total,
     page: currentPage,
     pageSize,
@@ -284,33 +284,29 @@ export default function ProjectsPage() {
     isLoading,
     error,
     mutate: refreshProjects
-  } = useDocumentaryProjects(page);
+  } = useDramaProjects(page);
 
   useEffect(() => {
-    if (documentaryProjects) {
-      const uniqueChannels = [...new Set(documentaryProjects.map((project: any) => 
+    if (dramaProjects) {
+      const uniqueChannels = [...new Set(dramaProjects.map((project: any) => 
         project.channel || "unknown"
       ))].sort() as string[];
       setAvailableChannels(uniqueChannels);
-      setProjectList(documentaryProjects);
+      setProjectList(dramaProjects);
     }
-  }, [documentaryProjects]);
+  }, [dramaProjects]);
 
   const filteredProjects = projectList.filter((project: any) => {
-    // All projects in projectList are already Documentary type, so no need to filter by type
     
-    // Filter by search text
     const matchesSearch =
       project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (project.description && project.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    // Filter by status
     let matchesStatus = true;
     if (selectedStatus !== "All") {
       matchesStatus = project.status === selectedStatus;
     }
 
-    // Filter by priority
     let matchesPriority = true;
     if (selectedPriority !== "All") {
       matchesPriority = project.priority === selectedPriority;
@@ -351,7 +347,7 @@ export default function ProjectsPage() {
 
   // Add a new function to handle edit navigation
   const handleEditProject = (projectId: number) => {
-    router.push(`/Admin/Projects/Documentary/${projectId}`);
+    router.push(`/Admin/Projects/DRAMA/${projectId}`);
   };
 
   // Handle deleting a project
@@ -360,11 +356,11 @@ export default function ProjectsPage() {
       setIsDeleting(true);
       const response = await Project.deleteProject(projectId);
       
-      if (response.data.success) {
-        toast.success("Project deleted successfully");
-        refreshProjects(); // Refresh project list using SWR mutate
-        setDeletingProject(null);
-      } else {
+              if (response.data.success) {
+          toast.success("Project deleted successfully");
+          refreshProjects(); // Refresh project list
+          setDeletingProject(null);
+        } else {
         toast.error(response.data.message || "Failed to delete project");
       }
     } catch (error: any) {
@@ -486,8 +482,8 @@ export default function ProjectsPage() {
         return;
       }
 
-      // Automatically set project_type to "Documentary" for Documentary page
-      formData.append('project_type', 'Documentary');
+      // Automatically set project_type to "DRAMA" for Drama page
+      formData.append('project_type', 'DRAMA');
       
       // Add form data
       formData.append('created_by', user?.id?.toString() || '');
@@ -506,7 +502,7 @@ export default function ProjectsPage() {
         if (formRef.current) {
           formRef.current.reset();
         }
-        refreshProjects(); // Refresh the projects list using SWR mutate
+        refreshProjects(); // Refresh the projects list
       } else {
         toast.error(response.data.message || "Failed to create project");
       }
@@ -592,9 +588,9 @@ export default function ProjectsPage() {
                         {channel === "unknown" ? "Unknown" : channel}
                       </option>
                     ))
-                                      ) : (
-                      <option value="Astaan Films">Astaan Films</option>
-                    )}
+                  ) : (
+                    <option value="Astaan TV">Astaan TV</option>
+                  )}
                 </select>
               </div>
               
@@ -712,7 +708,7 @@ export default function ProjectsPage() {
           <div>
             <h1 className="text-3xl font-bold mb-2 text-gray-800 flex items-center">
               <FiLayers className="mr-3 text-[#ff4e00]" size={32} />
-              <span>Documentary Projects</span>
+              <span>Drama Dubbing</span>
             </h1>
             <div className="flex items-center gap-3 text-gray-600">
               <span className="text-lg font-medium">
