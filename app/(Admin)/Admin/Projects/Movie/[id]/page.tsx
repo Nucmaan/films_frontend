@@ -12,6 +12,7 @@ import userAuth from "@/myStore/userAuth";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Project from "@/service/Project";
+import { useMovieProjects } from "@/lib/project/movie";
 
 const PROJECT_STATUSES = ["Pending", "In Progress", "Completed", "Planning"];
 const PROJECT_PRIORITIES = ["Low", "Medium", "High"];
@@ -29,43 +30,8 @@ export default function EditProjectPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Fetch available channels from Movie projects
-  const fetchChannels = async () => {
-    try {
-      const response = await Project.getAllProjects();
-      
-      if (response.status === 200) {
-        console.log('All projects from API for channels:', response.data.projects);
-        
-        // Filter to only Movie type projects and extract channels
-        const movieProjects = response.data.projects.filter((project: any) => 
-          project.project_type === "Movie"
-        );
-        
-        console.log('Movie projects for channels:', movieProjects);
-        console.log('Movie projects count for channels:', movieProjects.length);
-        
-        const uniqueChannels = [...new Set(movieProjects.map((project: any) => 
-          project.channel || "unknown"
-        ))].sort() as string[];
-        
-        console.log('Raw channels from movie projects:', movieProjects.map((p: any) => p.channel));
-        console.log('Unique channels after processing:', uniqueChannels);
-        
-        setAvailableChannels(uniqueChannels);
-        console.log('Available channels from Movie projects:', uniqueChannels);
-      } else {
-        toast.error("Failed to load channels");
-        setAvailableChannels(["Astaan Films"]);
-      }
-    } catch (error: any) {
-      console.error('Error fetching channels:', error);
-      const message = error.response?.data?.message || "Error loading channels";
-      toast.error(message);
-      // Set default channel if API fails
-      setAvailableChannels(["Astaan Films"]);
-    }
-  };
+  // Use SWR hook to get Movie projects
+  const { projects: movieProjects } = useMovieProjects();
 
   // Fetch the project data
   const fetchProject = async () => {
@@ -126,9 +92,19 @@ export default function EditProjectPage() {
   useEffect(() => {
     if (id) {
       fetchProject();
-      fetchChannels();
+      // fetchChannels(); // REMOVE THIS LINE
     }
   }, [id]);
+
+  // Extract available channels from movieProjects
+  useEffect(() => {
+    if (movieProjects && movieProjects.length > 0) {
+      const uniqueChannels = [...new Set(movieProjects.map((project: any) => 
+        project.channel || "unknown"
+      ))].sort() as string[];
+      setAvailableChannels(uniqueChannels);
+    }
+  }, [movieProjects]);
 
   // Update available channels when project loads to ensure current project's channel is included
   useEffect(() => {

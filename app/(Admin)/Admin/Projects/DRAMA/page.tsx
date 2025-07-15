@@ -10,8 +10,8 @@ import userAuth from "@/myStore/userAuth";
 import { motion } from "framer-motion";
 import Project from "@/service/Project";
 import Image from "next/image";
-import { useDramaProjects } from "@/lib/project/drama";
-
+import { useDramaProjects } from "@/lib/project/drama"; 
+ 
 const PROJECT_STATUSES = ["Pending", "In Progress", "Completed", "Planning"];
 const PROJECT_PRIORITIES = [ "Low", "Medium", "High"];
 
@@ -257,7 +257,6 @@ export default function ProjectsPage() {
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedPriority, setSelectedPriority] = useState("All");
   const [selectedChannel, setSelectedChannel] = useState("All");
-  // Remove loadingProjects state since we're using SWR loading state
   const [projectList, setProjectList] = useState<any[]>([]);
   const [availableChannels, setAvailableChannels] = useState<string[]>([]);
   const [viewingProject, setViewingProject] = useState<any>(null);
@@ -271,19 +270,28 @@ export default function ProjectsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const user = userAuth((state) => state.user);
+  const [page, setPage] = useState(1);
 
-  const { projects: dramaProjects, isLoading, error, mutate: refreshProjects } = useDramaProjects();
+  // Use paginated SWR hook
+  const {
+    projects: dramaProjects,
+    total,
+    page: currentPage,
+    pageSize,
+    totalPages,
+    hasNext,
+    hasPrevious,
+    isLoading,
+    error,
+    mutate: refreshProjects
+  } = useDramaProjects(page);
 
   useEffect(() => {
     if (dramaProjects) {
-      // Extract unique channels from drama projects
       const uniqueChannels = [...new Set(dramaProjects.map((project: any) => 
         project.channel || "unknown"
       ))].sort() as string[];
       setAvailableChannels(uniqueChannels);
-      console.log('Available channels from Drama projects:', uniqueChannels);
-      
-      // For now, just set the projects without task counts to keep it simple
       setProjectList(dramaProjects);
     }
   }, [dramaProjects]);
@@ -844,6 +852,25 @@ export default function ProjectsPage() {
           onClose={() => setShowAddModal(false)}
         />
       )}
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center items-center gap-4 mt-8">
+        <button
+          className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={!hasPrevious || page === 1}
+        >
+          Previous
+        </button>
+        <span className="font-medium">Page {currentPage} of {totalPages}</span>
+        <button
+          className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+          onClick={() => setPage((p) => p + 1)}
+          disabled={!hasNext || page === totalPages}
+        >
+          Next
+        </button>
+      </div>
     </motion.div>
   );
 }

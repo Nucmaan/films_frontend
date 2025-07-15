@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import userAuth from "@/myStore/userAuth";
 import { motion } from "framer-motion";
 import Project from "@/service/Project";
+import { useMovieProjects } from "@/lib/project/movie";
 import Image from "next/image";
 
 const PROJECT_STATUSES = ["Pending", "In Progress", "Completed", "Planning"];
@@ -258,7 +259,6 @@ export default function ProjectsPage() {
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedPriority, setSelectedPriority] = useState("All");
   const [selectedChannel, setSelectedChannel] = useState("All");
-  const [loadingProjects, setLoadingProjects] = useState(false);
   const [projectList, setProjectList] = useState<any[]>([]);
   const [availableChannels, setAvailableChannels] = useState<string[]>([]);
   const [viewingProject, setViewingProject] = useState<any>(null);
@@ -272,97 +272,31 @@ export default function ProjectsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const user = userAuth((state) => state.user);
+  const [page, setPage] = useState(1);
 
-  const getProjects = async () => {
-    try {
-      setLoadingProjects(true);
-      const response = await Project.getAllProjects();
-      
-      if (response.status === 200) {
-        console.log('All projects from API:', response.data.projects);
-        
-        // Filter to only Movie type projects immediately
-        const movieProjects = response.data.projects.filter((project: any) => 
-          project.project_type === "Movie"
-        );
-        
-        console.log('Movie projects only:', movieProjects);
-        console.log('Movie projects count:', movieProjects.length);
-        
-        // Extract unique channels from movie projects
-        const uniqueChannels = [...new Set(movieProjects.map((project: any) => 
-          project.channel || "unknown"
-        ))].sort() as string[];
-        setAvailableChannels(uniqueChannels);
-        console.log('Available channels from Movie projects:', uniqueChannels);
-        
-        // Fetch task counts for each movie project with better error handling
-        const projectsWithTaskCounts = await Promise.all(
-          movieProjects.map(async (project: any) => {
-            try {
-              // Make sure project.id exists and is valid
-              if (!project.id) {
-                console.warn(`Project without ID found:`, project);
-                return {
-                  ...project,
-                  tasks_count: 0
-                };
-              }
-
-              // Guard: Only fetch tasks if project.id is defined
-              if (project.id) {
-              const tasksResponse = await axios.get(
-                  `${process.env.NEXT_PUBLIC_TASK_SERVICE_URL}/api/task/projectTasks/${project.id}`
-              ).catch(error => {
-                  // Suppress 404 errors (no tasks found) and do not log as error
-                if (error.response && error.response.status === 404) {
-                  return { data: { success: true, tasks: [] } };
-                }
-                  // Only log other errors
-                  console.error(`Error fetching tasks for project ${project.id}:`, error);
-                  return { data: { success: false, tasks: [] } };
-              });
-                // Debug: log the full response
-                console.log('Tasks API response for project', project.id, tasksResponse.data);
-              // If we got a response, process it
-              if (tasksResponse && tasksResponse.data && tasksResponse.data.success) {
-                return {
-                  ...project,
-                    tasks_count: Array.isArray(tasksResponse.data.tasks) ? tasksResponse.data.tasks.length : 0
-                };
-                }
-              }
-              
-              return {
-                ...project,
-                tasks_count: 0
-              };
-            } catch (error) {
-              console.error(`Error fetching tasks for project ${project.id}:`, error);
-              // Return the project without crashing, just set tasks_count to 0
-              return {
-                ...project,
-                tasks_count: 0
-              };
-            }
-          })
-        );
-        
-        setProjectList(projectsWithTaskCounts);
-      } else {
-        toast.error("Failed to load projects");
-      }
-    } catch (error: any) {
-      const message = error.response?.data?.message || "Server error";
-      toast.error(message);
-    } finally {
-      setLoadingProjects(false);
-    }
-  };
+  // Use paginated SWR hook
+  const {
+    projects: movieProjects,
+    total,
+    page: currentPage,
+    pageSize,
+    totalPages,
+    hasNext,
+    hasPrevious,
+    isLoading,
+    error,
+    mutate: refreshProjects
+  } = useMovieProjects(page);
 
   useEffect(() => {
-    getProjects();
-  }, []);
+    if (movieProjects) {
+      const uniqueChannels = [...new Set(movieProjects.map((project: any) => 
+        project.channel || "unknown"
+      ))].sort() as string[];
+      setAvailableChannels(uniqueChannels);
+      setProjectList(movieProjects);
+    }
+  }, [movieProjects]);
 
   const filteredProjects = projectList.filter((project: any) => {
     // All projects in projectList are already Movie type, so no need to filter by type
@@ -442,7 +376,7 @@ export default function ProjectsPage() {
       
       if (response.data.success) {
         toast.success("Project deleted successfully");
-        getProjects(); // Refresh project list
+        refreshProjects(); // Refresh project list
         setDeletingProject(null);
       } else {
         toast.error(response.data.message || "Failed to delete project");
@@ -586,7 +520,7 @@ export default function ProjectsPage() {
         if (formRef.current) {
           formRef.current.reset();
         }
-        getProjects(); // Refresh the projects list
+        refreshProjects(); // Refresh the projects list
       } else {
         toast.error(response.data.message || "Failed to create project");
       }
@@ -753,6 +687,33 @@ export default function ProjectsPage() {
     );
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <LoadingReuse />
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="text-center py-12">
+          <div className="text-red-500 text-lg font-medium mb-2">Error loading projects</div>
+          <div className="text-gray-600 mb-4">{error}</div>
+          <button 
+            onClick={() => refreshProjects()}
+            className="px-4 py-2 bg-[#ff4e00] text-white rounded-lg hover:bg-[#ff4e00]/90 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -909,6 +870,25 @@ export default function ProjectsPage() {
           onClose={() => setShowAddModal(false)}
         />
       )}
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center items-center gap-4 mt-8">
+        <button
+          className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={!hasPrevious || page === 1}
+        >
+          Previous
+        </button>
+        <span className="font-medium">Page {currentPage} of {totalPages}</span>
+        <button
+          className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+          onClick={() => setPage((p) => p + 1)}
+          disabled={!hasNext || page === totalPages}
+        >
+          Next
+        </button>
+      </div>
     </motion.div>
   );
 }

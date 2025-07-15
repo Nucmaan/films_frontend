@@ -12,6 +12,7 @@ import userAuth from "@/myStore/userAuth";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Project from "@/service/Project";
+import { useDramaProjects } from "@/lib/project/drama";
 
 const PROJECT_STATUSES = ["Pending", "In Progress", "Completed", "Planning"];
 const PROJECT_PRIORITIES = ["Low", "Medium", "High"];
@@ -29,37 +30,8 @@ export default function EditProjectPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Fetch available channels from Movie projects
-  const fetchChannels = async () => {
-    try {
-      const response = await Project.getAllProjects();
-      
-      if (response.status === 200) {
-        console.log('All projects from API for channels:', response.data.projects);
-        
-        // Filter to only Movie type projects and extract channels
-        const DRAMAProjects = response.data.projects.filter((project: any) => 
-          project.project_type === "DRAMA"
-        );
- 
-        
-        const uniqueChannels = [...new Set(DRAMAProjects.map((project: any) => 
-          project.channel || "unknown"
-        ))].sort() as string[];
-      
-        
-        setAvailableChannels(uniqueChannels);
-      } else {
-        toast.error("Failed to load channels");
-        setAvailableChannels(["Astaan Films"]);
-      }
-    } catch (error: any) {
-      const message = error.response?.data?.message || "Error loading channels";
-      toast.error(message);
-      // Set default channel if API fails
-      setAvailableChannels(["Astaan Films"]);
-    }
-  };
+  // Use SWR hook to get DRAMA projects
+  const { projects: dramaProjects } = useDramaProjects();
 
   // Fetch the project data
   const fetchProject = async () => {
@@ -119,20 +91,19 @@ export default function EditProjectPage() {
   useEffect(() => {
     if (id) {
       fetchProject();
-      fetchChannels();
+      // fetchChannels(); // REMOVE THIS LINE
     }
   }, [id]);
 
-  // Update available channels when project loads to ensure current project's channel is included
+  // Extract available channels from dramaProjects
   useEffect(() => {
-    if (project && project.channel && availableChannels.length > 0) {
-      // Check if project's channel is in available channels
-      if (!availableChannels.includes(project.channel)) {
-        console.log('Project channel not in available channels, adding it:', project.channel);
-        setAvailableChannels(prev => [...prev, project.channel].sort());
-      }
+    if (dramaProjects && dramaProjects.length > 0) {
+      const uniqueChannels = [...new Set(dramaProjects.map((project: any) => 
+        project.channel || "unknown"
+      ))].sort() as string[];
+      setAvailableChannels(uniqueChannels);
     }
-  }, [project, availableChannels]);
+  }, [dramaProjects]);
 
   // Reset image states
   const resetImageStates = () => {
