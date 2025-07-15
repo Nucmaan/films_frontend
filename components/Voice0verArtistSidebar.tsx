@@ -79,7 +79,7 @@ export default function Voice0verArtistSidebar({ open = true }: VoiceoverArtistS
   ];
 
   const toolsMenuItems = [
-    { path: "/Voice-over-Artist/Payments", icon: DollarSign, label: "Payments" },    
+   // { path: "/Voice-over-Artist/Payments", icon: DollarSign, label: "Payments" },    
     { path: "/Voice-over-Artist/Notifications", icon: Bell, label: "Notifications" },   
     { path: "/Voice-over-Artist/Settings", icon: Settings, label: "Settings" },
   ];

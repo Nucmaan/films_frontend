@@ -82,7 +82,7 @@ export default function EditorSidebar({ isCollapsed = false }: EditorSidebarProp
   ];
 
   const toolsMenuItems = [
-    { path: "/Editor/Payments", icon: DollarSign, label: "Payments" },
+    //{ path: "/Editor/Payments", icon: DollarSign, label: "Payments" },
     { path: "/Editor/Notifications", icon: Bell, label: "Notifications" },
     { path: "/Editor/Settings", icon: Settings, label: "Settings" },
   ];

@@ -36,7 +36,7 @@ export default function AssignedTasksPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const taskUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL; 
+  const taskUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
 
   const statusOptions = ["In Progress", "To Do"];
 

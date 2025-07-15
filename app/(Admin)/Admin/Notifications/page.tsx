@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BiBell, BiX, BiSearch, BiEnvelopeOpen } from 'react-icons/bi';
-import axios from 'axios';
+import { useNotifications } from '@/lib/notification/page.js';
 
 interface Notification {
   id: number;
@@ -14,44 +14,11 @@ interface Notification {
 }
 
 export default function NotificationsPage() {
-
   const [search, setSearch] = useState('');
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
   const notificationServiceUrl = process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL;
+  const { notifications, isLoading: loading, isError: error } = useNotifications(notificationServiceUrl);
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        setLoading(true);
-         const response = await axios.get(`${notificationServiceUrl}/api/notifications/all`, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        
-         const data = response.data;
-        
-         const formattedNotifications = data.data.map((notification: Notification) => ({
-          ...notification,
-          time: formatTimeAgo(new Date(notification.created_at))
-        }));
-        
-        setNotifications(formattedNotifications);
-      } catch (err) {
-        console.error('Error fetching notifications:', err);
-        setError('Failed to load notifications');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNotifications();
-  }, []);
-
-   const formatTimeAgo = (date: Date) => {
+  const formatTimeAgo = (date: Date) => {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.round(diffMs / 60000);
@@ -62,15 +29,18 @@ export default function NotificationsPage() {
     if (diffMins < 60) return `${diffMins} mins ago`;
     if (diffHours < 24) return `${diffHours} hours ago`;
     if (diffDays < 30) return `${diffDays} days ago`;
-    
-     return date.toLocaleDateString('en-US', {
+
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
-  const filteredNotifications = notifications.filter(notification => {
+  const filteredNotifications = notifications.map((notification: Notification) => ({
+    ...notification,
+    time: notification.time || formatTimeAgo(new Date(notification.created_at)),
+  })).filter((notification: Notification) => {
     if (search && !notification.message.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -107,13 +77,13 @@ export default function NotificationsPage() {
                 <BiX className="text-rose-600" size={28} />
               </div>
               <h3 className="text-gray-700 font-medium mb-1">Error loading notifications</h3>
-              <p className="text-gray-500 text-sm text-center px-4">{error}</p>
+              <p className="text-gray-500 text-sm text-center px-4">Failed to load notifications</p>
             </div>
           ) : filteredNotifications.length > 0 ? (
             <div className="divide-y divide-gray-100">
-              {filteredNotifications.map((notification) => (
-                <div 
-                  key={notification.id} 
+              {filteredNotifications.map((notification: Notification) => (
+                <div
+                  key={notification.id}
                   className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5 transition-colors duration-200 hover:bg-gray-50 relative"
                 >
                   <div className="flex-shrink-0">
@@ -127,7 +97,7 @@ export default function NotificationsPage() {
                     </p>
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
                       <p className="text-xs text-gray-400">
-                        {notification.time || formatTimeAgo(new Date(notification.created_at))}
+                        {notification.time}
                       </p>
                     </div>
                   </div>

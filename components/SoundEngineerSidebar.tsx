@@ -80,7 +80,7 @@ export default function SoundEngineerSidebar({ open = true }: SoundEngineerSideb
   ];
 
   const toolsMenuItems = [
-    { path: "/Sound-Engineer/Payments", icon: DollarSign, label: "Payments" },    
+    //{ path: "/Sound-Engineer/Payments", icon: DollarSign, label: "Payments" },    
     { path: "/Sound-Engineer/Notifications", icon: Bell, label: "Notifications" },   
     { path: "/Sound-Engineer/Settings", icon: Settings, label: "Settings" },
   ];
