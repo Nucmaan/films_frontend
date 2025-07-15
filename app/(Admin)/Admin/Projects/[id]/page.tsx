@@ -21,6 +21,7 @@ import {
  import userAuth from "@/myStore/userAuth";
 import { useProject, useProjectTasks, useProjectUsers } from '@/lib/itsMe/page.js';
 
+
  const getStatusColor = (status: string) => {
   switch (status) {
     case "Pending":
@@ -143,13 +144,27 @@ export default function ProjectDetail({ params }: { params: any }) {
   const router = useRouter();
   const id = params.id;
 
+  const [page, setPage] = useState(1);
+
   const projectService = process.env.NEXT_PUBLIC_PROJECT_SERVICE_URL;
   const taskService = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
   const userService = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
 
   // SWR hooks
   const { project, success: projectSuccess, error: projectError, isLoading: projectLoading, mutate: mutateProject } = useProject(id, projectService);
-  const { tasks, success: tasksSuccess, error: tasksError, isLoading: tasksLoading, mutate: mutateTasks } = useProjectTasks(id, taskService);
+  const {
+    tasks,
+    total,
+    page: currentPage = 1,
+    pageSize,
+    totalPages = 1,
+    hasNext = false,
+    hasPrevious = false,
+    success: tasksSuccess,
+    error: tasksError,
+    isLoading: tasksLoading,
+    mutate: mutateTasks
+  } = useProjectTasks(id, taskService, page);
   const { users, error: usersError, isLoading: usersLoading, mutate: mutateUsers } = useProjectUsers(userService);
 
   // Remove useEffect and useState for fetching project, tasks, users
@@ -241,7 +256,9 @@ export default function ProjectDetail({ params }: { params: any }) {
         <div className="grid grid-cols-4 gap-6 mt-6">
           {[...Array(4)].map((_, idx) => (
             <div key={idx} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm animate-pulse">
+              {/* Column title */}
               <div className="h-6 w-32 bg-gray-200 rounded mb-4" />
+              {/* Skeleton cards for tasks */}
               {[...Array(2)].map((_, tIdx) => (
                 <div key={tIdx} className="mb-6">
                   <div className="h-44 w-full bg-gray-100 rounded mb-3" />
@@ -1115,6 +1132,25 @@ export default function ProjectDetail({ params }: { params: any }) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Pagination Controls for Tasks */}
+      <div className="flex justify-center items-center gap-4 mt-8">
+        <button
+          className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+          onClick={() => setPage((p: number) => Math.max(1, p - 1))}
+          disabled={!hasPrevious || page === 1}
+        >
+          Previous
+        </button>
+        <span className="font-medium">Page {currentPage} of {totalPages}</span>
+        <button
+          className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+          onClick={() => setPage((p: number) => p + 1)}
+          disabled={!hasNext || page === totalPages}
+        >
+          Next
+        </button>
       </div>
 
        {showDeleteConfirm && (

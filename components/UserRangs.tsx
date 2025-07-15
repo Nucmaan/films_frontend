@@ -88,10 +88,49 @@ export default function UserRangs() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-lg font-medium text-gray-700">Loading user rankings...</div>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-6">
+        <div className="container mx-auto">
+          <div className="flex flex-col gap-8">
+            {/* Skeleton for Top Performers */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex flex-col items-center bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+                  <div className="h-16 w-16 mb-4 bg-gray-200 rounded-full animate-pulse" />
+                  <div className="h-5 w-24 mb-2 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-4 w-16 mb-1 bg-gray-200 rounded animate-pulse" />
+                  <div className="flex gap-4 mt-4 w-full justify-between">
+                    <div className="h-4 w-10 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-4 w-10 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-4 w-10 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Skeleton for Table */}
+            <div className="border border-gray-100 bg-white rounded-2xl overflow-hidden shadow-sm">
+              <div className="border-b border-gray-100 py-5 px-6">
+                <div className="h-6 w-48 mb-2 bg-gray-200 rounded animate-pulse" />
+                <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <tbody>
+                    {[...Array(5)].map((_, idx) => (
+                      <tr key={idx} className="border-b border-gray-100">
+                        <td className="p-4"><div className="h-4 w-6 bg-gray-200 rounded animate-pulse" /></td>
+                        <td className="p-4"><div className="h-8 w-32 rounded-full bg-gray-200 animate-pulse" /></td>
+                        <td className="p-4"><div className="h-4 w-10 bg-gray-200 rounded animate-pulse" /></td>
+                        <td className="p-4"><div className="h-4 w-10 bg-gray-200 rounded animate-pulse" /></td>
+                        <td className="p-4"><div className="h-4 w-10 bg-gray-200 rounded animate-pulse" /></td>
+                        <td className="p-4"><div className="h-4 w-10 bg-gray-200 rounded animate-pulse" /></td>
+                        <td className="p-4"><div className="h-8 w-24 rounded-lg bg-gray-200 animate-pulse" /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
