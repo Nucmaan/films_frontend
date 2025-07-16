@@ -16,6 +16,7 @@ import LoadingReuse from "@/components/LoadingReuse";
 import userAuth from "@/myStore/userAuth";
 import Authentication from "@/service/Authentication";
 import Image from "next/image";
+import AdminLayoutSkeleton from "@/components/AdminLayoutSkeleton";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -94,7 +95,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   if (!isHydrated) {
-    return <LoadingReuse />;
+    return <AdminLayoutSkeleton />;
   }
 
   if (user?.role !== "Admin") {

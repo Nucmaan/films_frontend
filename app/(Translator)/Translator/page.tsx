@@ -4,6 +4,7 @@ import userAuth from '@/myStore/userAuth';
 import { format } from 'date-fns';
 import { FiCheckCircle, FiClock, FiAlertCircle, FiCalendar } from 'react-icons/fi';
 import { useUserTaskStats } from "@/lib/allInOne/page.js";
+import VoiceOverArtistDashboardSkeleton from "@/components/VoiceOverArtistDashboardSkeleton";
 
 export default function EditorPage() {
   const user = userAuth((state) => state.user);
@@ -11,14 +12,7 @@ export default function EditorPage() {
   const { stats, isLoading, error } = useUserTaskStats(taskUrl, user?.id);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ff4e00]"></div>
-          <p className="text-gray-500 font-medium">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return <VoiceOverArtistDashboardSkeleton />;
   }
 
   if (error || !stats) {

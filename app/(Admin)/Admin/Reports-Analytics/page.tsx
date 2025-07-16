@@ -48,6 +48,7 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useUsersWithCompletedTasks } from "@/lib/analytics/page.js";
+import ReportsAnalyticsSkeleton from "@/components/ReportsAnalyticsSkeleton";
 
 interface CompletedTask {
   id: number;
@@ -207,12 +208,7 @@ export default function ReportsAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-lg font-medium text-gray-700">Loading analytics dashboard...</div>
-        </div>
-      </div>
+      <ReportsAnalyticsSkeleton />
     );
   }
 

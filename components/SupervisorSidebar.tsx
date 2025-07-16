@@ -74,7 +74,7 @@ export default function SupervisorSidebar({ open = true }: SupervisorSidebarProp
   const mainMenuItems = [
     { path: "/Supervisor", icon: Home, label: "Dashboard" },
    // { path: "/Supervisor/User-Management", icon: Users, label: "User Management" },
-    { path: "/Supervisor/Projects", icon: Compass, label: "Project Overview" },
+    { path: "/Supervisor/Projects", icon: Compass, label: "Project Overview" },  
   ];
 
   const systemMenuItems = [

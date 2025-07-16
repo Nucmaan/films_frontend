@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import ProjectKanbanSkeleton from "@/components/ProjectKanbanSkeleton";
 import LoadingReuse from "@/components/LoadingReuse";
 import { FiEdit, FiEye, FiTrash2, FiCalendar, FiClock, FiFlag, FiX, FiPlus, FiSearch, FiUpload, FiImage, FiFilter, FiInfo, FiLayers } from "react-icons/fi";
 import { useRouter } from "next/navigation";
@@ -691,7 +692,7 @@ export default function ProjectsPage() {
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <LoadingReuse />
+        <ProjectKanbanSkeleton />
       </div>
     );
   }

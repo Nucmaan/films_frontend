@@ -12,6 +12,8 @@ import {
 } from "react-icons/fa";
 import { BiBell } from "react-icons/bi";
 import toast from "react-hot-toast";
+import AdminLayoutSkeleton from "@/components/AdminLayoutSkeleton";
+
 import LoadingReuse from "@/components/LoadingReuse";
 import TranslatorSidebar from "@/components/TranslatorSidebar";
 import userAuth from "@/myStore/userAuth";
@@ -216,7 +218,7 @@ export default function TranslatorLayout({ children }: AdminLayoutProps) {
   };
 
   if (!isHydrated) {
-    return <LoadingReuse />;
+    return <AdminLayoutSkeleton />;
   }
 
   if (user?.role !== "Translator") {

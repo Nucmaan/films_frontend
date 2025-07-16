@@ -12,6 +12,8 @@ import {
 } from "react-icons/fa";
 import { BiBell } from "react-icons/bi";
 import toast from "react-hot-toast";
+import AdminLayoutSkeleton from "@/components/AdminLayoutSkeleton";
+
 import LoadingReuse from "@/components/LoadingReuse";
 import userAuth from "@/myStore/userAuth";
 import SoundEngineerSidebar from "@/components/SoundEngineerSidebar";
@@ -225,7 +227,7 @@ export default function SoundEngineerLayout({ children }: AdminLayoutProps) {
 
 
   if (!isHydrated) {
-    return <LoadingReuse />;
+    return <AdminLayoutSkeleton />;
   }
 
   if (user?.role !== "Sound Engineer") {

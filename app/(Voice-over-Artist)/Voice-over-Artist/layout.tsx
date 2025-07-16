@@ -12,6 +12,8 @@ import {
 } from "react-icons/fa";
 import { BiBell } from "react-icons/bi";
 import toast from "react-hot-toast";
+import AdminLayoutSkeleton from "@/components/AdminLayoutSkeleton";
+
 import LoadingReuse from "@/components/LoadingReuse";
 import userAuth from "@/myStore/userAuth";
 import Voice0verArtistSidebar from "@/components/Voice0verArtistSidebar";
@@ -220,7 +222,7 @@ export default function Voice0verArtistLayout({ children }: AdminLayoutProps) {
   };
 
   if (!isHydrated) {
-    return <LoadingReuse />;
+    return <AdminLayoutSkeleton />;
   }
 
   if (user?.role !== "Voice-over Artist") {

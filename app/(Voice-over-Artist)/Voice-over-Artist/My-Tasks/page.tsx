@@ -4,6 +4,7 @@ import userAuth from '@/myStore/userAuth';
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { useUserCompletedTasks } from "@/lib/allInOne/page.js";
+import VoiceOverArtistMyTasksSkeleton from "@/components/VoiceOverArtistMyTasksSkeleton";
 
 interface TaskStatusUpdate {
   id: number;
@@ -203,14 +204,7 @@ export default function MyTasksPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ff4e00]"></div>
-          <p className="text-gray-500 font-medium">Loading your tasks...</p>
-        </div>
-      </div>
-    );
+    return <VoiceOverArtistMyTasksSkeleton />;
   }
 
   return (

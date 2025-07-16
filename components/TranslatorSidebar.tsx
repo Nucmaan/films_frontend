@@ -80,8 +80,7 @@ export default function TranslatorSidebar({ open = true }: TranslatorSidebarProp
   ];
 
   const toolsMenuItems = [  
-    //{ path: "/Translator/Payments", icon: DollarSign, label: "Payments" },    
-    { path: "/Translator/Notifications", icon: Bell, label: "Notifications" },   
+     { path: "/Translator/Notifications", icon: Bell, label: "Notifications" },   
     { path: "/Translator/Settings", icon: Settings, label: "Settings" },
   ];
 

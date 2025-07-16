@@ -7,6 +7,7 @@ import {
   BiBell, BiCheck, BiCheckCircle, BiEnvelope, BiEnvelopeOpen,
   BiSearch, BiX
 } from 'react-icons/bi';
+import NotificationsSkeleton from "@/components/NotificationsSkeleton";
 
 interface Notification {
   id: number;
@@ -168,9 +169,7 @@ export default function NotificationsPage() {
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff4e00]"></div>
-            </div>
+            <NotificationsSkeleton />
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-12 sm:py-16">
               <div className="bg-rose-100 p-4 rounded-full mb-4">

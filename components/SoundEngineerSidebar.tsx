@@ -14,7 +14,8 @@ import {
   DollarSign,
   ListChecks,
   ClipboardCheck,
-  Music
+  Music,
+  Compass
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -75,6 +76,8 @@ export default function SoundEngineerSidebar({ open = true }: SoundEngineerSideb
 
   const mainMenuItems = [
     { path: "/Sound-Engineer", icon: Home, label: "Dashboard" },
+        { path: "/Sound-Engineer/Projects", icon: Compass, label: "Project Overview" },  
+
     { path: "/Sound-Engineer/My-Tasks", icon: ListChecks, label: "My Tasks" },  
     { path: "/Sound-Engineer/assignedTasks", icon: ClipboardCheck, label: "Assigned Tasks" },
   ];

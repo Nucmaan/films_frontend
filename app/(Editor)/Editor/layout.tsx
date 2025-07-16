@@ -13,6 +13,8 @@ import {
 import { BiBell } from "react-icons/bi";
 import toast from "react-hot-toast";
 import LoadingReuse from "@/components/LoadingReuse";
+import AdminLayoutSkeleton from "@/components/AdminLayoutSkeleton";
+
 import userAuth from "@/myStore/userAuth";
 import EditorSidebar from "@/components/EditorSidebar";
 import axios from "axios";
@@ -224,7 +226,7 @@ export default function EditorLayout({ children }: AdminLayoutProps) {
   };
 
   if (!isHydrated) {
-    return <LoadingReuse />;
+    return <AdminLayoutSkeleton />;
   }
 
   if (user?.role !== "Editor") {

@@ -12,6 +12,7 @@ import {
 } from "react-icons/fa";
 import toast from "react-hot-toast";
 import LoadingReuse from "@/components/LoadingReuse";
+import AdminLayoutSkeleton from "@/components/AdminLayoutSkeleton";
 import SupervisorSidebar from "@/components/SupervisorSidebar";
 import userAuth from "@/myStore/userAuth";
 import Authentication from "@/service/Authentication";
@@ -91,7 +92,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   if (!isHydrated) {
-    return <LoadingReuse />;
+    return <AdminLayoutSkeleton />;
   }
 
   if (user?.role !== "Supervisor") {

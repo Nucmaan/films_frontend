@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { FiClock, FiCalendar, FiFlag, FiCheckCircle, FiAlertCircle, FiFileText, FiExternalLink, FiEdit, FiUpload, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import VoiceOverArtistAssignedTasksSkeleton from "@/components/VoiceOverArtistAssignedTasksSkeleton";
 
 interface Assignment {
   id: number;
@@ -209,14 +210,7 @@ export default function AssignedTasksPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ff4e00]"></div>
-          <p className="text-gray-500 font-medium">Loading tasks...</p>
-        </div>
-      </div>
-    );
+    return <VoiceOverArtistAssignedTasksSkeleton />;
   }
 
   return (
