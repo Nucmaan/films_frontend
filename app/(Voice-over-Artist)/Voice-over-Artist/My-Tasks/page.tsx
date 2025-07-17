@@ -345,10 +345,10 @@ export default function MyTasksPage() {
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   {/* Removed user image and Unassigned label, only show title */}
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 group-hover:text-[#ff4e00] transition-colors">
-                      {task["SubTask.title"] || 'Untitled Task'}
-                    </h2>
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900 group-hover:text-[#ff4e00] transition-colors">
+                        {task["SubTask.title"] || 'Untitled Task'}
+                      </h2>
                   </div>
                   <span className={`px-3 py-1 rounded-lg text-sm font-medium ${getStatusColor(task.status)}`}>
                     {task.status || 'Unknown'}

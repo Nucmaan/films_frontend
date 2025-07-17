@@ -21,6 +21,8 @@ import {
 } from "react-icons/fi";
 import userAuth from "@/myStore/userAuth";
 import useSWR from 'swr';
+import SubtasksTableSkeleton from '@/components/SubtasksTableSkeleton';
+
 
 interface Subtask {
   id: number;
@@ -822,9 +824,7 @@ export default function Page() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff4e00]"></div>
-        </div>
+       <SubtasksTableSkeleton />
       ) : (
         <>
           {subtasks.length === 0 && !showInlineForm ? (
