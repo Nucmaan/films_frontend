@@ -92,10 +92,19 @@ export default function MyTasksPage() {
 
   const parseFileUrls = (fileUrlString: string | undefined) => {
     if (!fileUrlString) return [];
-    
     try {
-      const cleanString = fileUrlString.replace(/\\/g, '').replace(/"\[/g, '[').replace(/\]"/g, ']');
-      return JSON.parse(cleanString);
+      // Remove extra quotes if present
+      let cleaned = fileUrlString.trim();
+      if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+        cleaned = cleaned.slice(1, -1);
+      }
+      // Try to parse as JSON array
+      if (cleaned.startsWith('[')) {
+        const parsed = JSON.parse(cleaned);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+      // Otherwise, treat as a single URL string
+      return [cleaned];
     } catch (error) {
       console.error('Error parsing file URLs:', error);
       return [];
@@ -335,21 +344,11 @@ export default function MyTasksPage() {
             >
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <img
-                        src={task.profile_image || '/default-avatar.png'}
-                        alt={task.assigned_user || 'User'}
-                        className="w-10 h-10 rounded-full object-cover ring-2 ring-white"
-                      />
-                      <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 ring-2 ring-white"></span>
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900 group-hover:text-[#ff4e00] transition-colors">
-                        {task["SubTask.title"] || 'Untitled Task'}
-                      </h2>
-                      <p className="text-sm text-gray-500">{task.assigned_user || 'Unassigned'}</p>
-                    </div>
+                  {/* Removed user image and Unassigned label, only show title */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 group-hover:text-[#ff4e00] transition-colors">
+                      {task["SubTask.title"] || 'Untitled Task'}
+                    </h2>
                   </div>
                   <span className={`px-3 py-1 rounded-lg text-sm font-medium ${getStatusColor(task.status)}`}>
                     {task.status || 'Unknown'}
@@ -428,19 +427,12 @@ export default function MyTasksPage() {
         {showModal && selectedTask && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+              {/* Task Details Heading */}
               <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <img
-                      src={selectedTask.profile_image || '/default-avatar.png'}
-                      alt={selectedTask.assigned_user}
-                      className="w-12 h-12 rounded-full object-cover ring-2 ring-white"
-                    />
-                    <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 ring-2 ring-white"></span>
-                  </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-1">Task Details</h2>
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">{selectedTask["SubTask.title"]}</h2>
-                    <p className="text-sm text-gray-500">Assigned to {selectedTask.assigned_user}</p>
+                    <span className="text-lg font-semibold text-gray-900">{selectedTask["SubTask.title"]}</span>
                   </div>
                 </div>
                 <button

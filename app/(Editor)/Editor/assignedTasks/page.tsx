@@ -166,18 +166,15 @@ export default function AssignedTasksPage() {
   };
 
   const handleSubmitTask = async () => {
-    if (!selectedTask || !selectedFiles) {
-      toast.error('Please select files to submit');
+    
+    if (!selectedTask) {
+      toast.error('Please select Task to submit');
       return;
     }
 
     setIsSubmitting(true);
     const formData = new FormData();
-    
-    // Append the file to FormData with the correct field name
-    if (selectedFiles[0]) {
-      formData.append('file_url', selectedFiles[0]);
-    }
+   
 
     formData.append('updated_by', user?.id.toString() || '');
     formData.append('status', 'Completed');
@@ -196,7 +193,6 @@ export default function AssignedTasksPage() {
       if (data.success) {
         toast.success('Task submitted successfully');
         setShowModal(false);
-        setSelectedFiles(null);
         fetchTasks(); // Refresh the task list
       } else {
         toast.error(data.message || 'Failed to submit task');
@@ -763,49 +759,9 @@ export default function AssignedTasksPage() {
 
                   {/* Submit Task Section */}
                   <div className="border-t pt-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Submit Task</h3>
-                    
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Completed</h3>
                     <div className="space-y-4">
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          onChange={handleFileChange}
-                          className="hidden"
-                        />
-                        
-                        <div className="text-center">
-                          <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
-                          <div className="mt-4 flex justify-center text-sm leading-6 text-gray-600">
-                            <label
-                              htmlFor="file-upload"
-                              className="relative cursor-pointer rounded-md bg-white font-semibold text-[#ff4e00] focus-within:outline-none focus-within:ring-2 focus-within:ring-[#ff4e00] focus-within:ring-offset-2 hover:text-[#ff4e00]/80"
-                            >
-                              <span onClick={() => fileInputRef.current?.click()}>Select file</span>
-                            </label>
-                          </div>
-                          <p className="text-xs leading-5 text-gray-600 mt-2">Upload your completed task file</p>
-                        </div>
-
-                        {selectedFiles && selectedFiles.length > 0 && (
-                          <div className="mt-4">
-                            <h4 className="text-sm font-medium text-gray-900 mb-2">Selected File:</h4>
-                            <div className="flex items-center text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                              <FiFileText className="mr-2 h-4 w-4" />
-                              <span className="flex-1 truncate">{selectedFiles[0].name}</span>
-                              <button
-                                onClick={() => setSelectedFiles(null)}
-                                className="ml-2 text-gray-500 hover:text-gray-700"
-                              >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
+                      {/* File upload UI removed */}
                       <div className="flex justify-end gap-3">
                         <button
                           onClick={() => setShowModal(false)}
@@ -815,7 +771,7 @@ export default function AssignedTasksPage() {
                         </button>
                         <button
                           onClick={handleSubmitTask}
-                          disabled={isSubmitting || !selectedFiles}
+                          disabled={isSubmitting}
                           className="px-4 py-2 text-sm font-medium text-white bg-[#ff4e00] rounded-md hover:bg-[#ff4e00]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff4e00] disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
                         >
                           {isSubmitting ? (
@@ -824,10 +780,10 @@ export default function AssignedTasksPage() {
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                               </svg>
-                              Submitting...
+                              Completing...
                             </span>
                           ) : (
-                            'Submit Task'
+                            'Completed'
                           )}
                         </button>
                       </div>
