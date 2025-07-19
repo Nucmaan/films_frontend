@@ -189,7 +189,7 @@ export default function Page() {
     estimated_hours: 0,
     start_time: "",
   });
-  const user = userAuth((state) => state.user);
+  const userTask = userAuth((state) => state.user);
   const [viewSubtaskId, setViewSubtaskId] = useState<number | null>(null);
   const [showAssigneeModal, setShowAssigneeModal] = useState(false);
   const [showInlineForm, setShowInlineForm] = useState(false);
@@ -537,10 +537,17 @@ export default function Page() {
               assignedUser?.name || "Unknown"
             );
 
+            console.log("Assigning with:", {
+              task_id: response.data.id,
+              user_id: newSubtask.assigned_to,
+              assignedby_id: userTask?.employee_id
+            });
+
             await axios
               .post(`${taskService}/api/task-assignment/assignTask`, {
                 task_id: response.data.id,
                 user_id: newSubtask.assigned_to,
+                assignedby_id: userTask?.employee_id
               })
               .then(() => {
                 console.log("Task assignment API call successful");
@@ -712,6 +719,7 @@ export default function Page() {
               .post(`${taskService}/api/task-assignment/assignTask`, {
                 task_id: response.data.id,
                 user_id: inlineNewSubtask.assigned_to,
+                assignedby_id: userTask?.employee_id
               })
               .then(() => {
                 console.log("Task assignment API call successful");
@@ -1174,7 +1182,7 @@ export default function Page() {
                             <input
                               type="number"
                               min="0"
-                              step="0.5"
+                              step="0.01"
                               placeholder="Est. hours"
                               value={inlineNewSubtask.estimated_hours || ""}
                               onChange={(e) =>
@@ -1682,7 +1690,7 @@ export default function Page() {
                     <input
                       type="number"
                       min="0"
-                      step="0.5"
+                      step="0.01"
                       value={editSubtask.estimated_hours}
                       onChange={(e) =>
                         setEditSubtask({
@@ -2229,7 +2237,7 @@ export default function Page() {
                   <input
                     type="number"
                     min="0"
-                    step="0.5"
+                    step="0.01"
                     value={newSubtask.estimated_hours}
                     onChange={(e) =>
                       setNewSubtask({
