@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../globals.css";
+import AutoLogoutClient from "./AutoLogoutClient";
+
 import ToasterClient from "./ToasterClient";
 
 const inter = Inter({
@@ -24,6 +26,7 @@ export default function TranslatorLayout({
         suppressHydrationWarning
         className={`${inter.variable} antialiased`}
       >
+        <AutoLogoutClient />
         {children}
         <ToasterClient />
       </body>

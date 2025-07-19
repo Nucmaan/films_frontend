@@ -20,6 +20,7 @@ import {
   MessageCircle,
   Calendar,
   FileText,
+  AudioWaveform,
   UserCircle
 } from "lucide-react";
 import Link from "next/link";
@@ -88,7 +89,7 @@ export default function AdminSideBar({ open = true }: AdminSideBarProps) {
   const systemMenuItems = [
     { path: "/Admin/Reports-Analytics", icon: BarChart, label: "Reports & Analytics" },
     { path: "/Admin/Notifications", icon: Bell, label: "Notifications" },
-    //{ path: "/Admin/Payroll-Commissions", icon: DollarSign, label: "Payments" },
+    { path: "/Admin/Sound-End", icon: AudioWaveform , label: "Sound-Eng" },
     { path: "/Admin/Settings", icon: Settings, label: "Settings" },
   ];
 

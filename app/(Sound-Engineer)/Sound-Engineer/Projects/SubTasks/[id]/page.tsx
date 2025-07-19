@@ -540,14 +540,14 @@ export default function Page() {
             console.log("Assigning with:", {
               task_id: response.data.id,
               user_id: newSubtask.assigned_to,
-              assignedby_id: userTask?.employee_id
+              assignedby_id: userTask?.id
             });
 
             await axios
               .post(`${taskService}/api/task-assignment/assignTask`, {
                 task_id: response.data.id,
                 user_id: newSubtask.assigned_to,
-                assignedby_id: userTask?.employee_id
+                assignedby_id: userTask?.id
               })
               .then(() => {
                 console.log("Task assignment API call successful");
@@ -719,7 +719,7 @@ export default function Page() {
               .post(`${taskService}/api/task-assignment/assignTask`, {
                 task_id: response.data.id,
                 user_id: inlineNewSubtask.assigned_to,
-                assignedby_id: userTask?.employee_id
+                assignedby_id: userTask?.id
               })
               .then(() => {
                 console.log("Task assignment API call successful");
