@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { BiBell, BiX, BiSearch, BiEnvelopeOpen } from 'react-icons/bi';
-import { useNotifications } from '@/lib/notification/page.js';
-import NotificationsSkeleton from "@/components/NotificationsSkeleton";
+import { useNotifications } from '@/lib/notification/page';
+import NotificationsSkeleton from '@/components/NotificationsSkeleton';
 
 interface Notification {
   id: number;
@@ -16,35 +16,34 @@ interface Notification {
 
 export default function NotificationsPage() {
   const [search, setSearch] = useState('');
-  const notificationServiceUrl = process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL;
-  const { notifications, isLoading: loading, isError: error } = useNotifications(notificationServiceUrl);
+  const [page, setPage] = useState(1);
 
-  const formatTimeAgo = (date: Date) => {
+  const { notifications, isLoading, isError, meta } = useNotifications(page);
+
+  const formatTimeAgo = (dateStr: string) => {
+    const date = new Date(dateStr);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.round(diffMs / 60000);
-    const diffHours = Math.round(diffMins / 60);
-    const diffDays = Math.round(diffHours / 24);
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return 'Just Now';
-    if (diffMins < 60) return `${diffMins} mins ago`;
-    if (diffHours < 24) return `${diffHours} hours ago`;
-    if (diffDays < 30) return `${diffDays} days ago`;
-
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   };
 
-  const filteredNotifications = notifications.map((notification: Notification) => ({
-    ...notification,
-    time: notification.time || formatTimeAgo(new Date(notification.created_at)),
-  })).filter((notification: Notification) => {
-    if (search && !notification.message.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
+  const filteredNotifications = (notifications as Notification[])
+    .filter((n) =>
+      search
+        ? n.message.toLowerCase().includes(search.toLowerCase())
+        : true
+    )
+    .map((n) => ({
+      ...n,
+      time: formatTimeAgo(n.created_at),
+    }));
 
   return (
     <div className="w-full h-full min-h-screen bg-gray-50">
@@ -68,9 +67,9 @@ export default function NotificationsPage() {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          {loading ? (
+          {isLoading ? (
             <NotificationsSkeleton />
-          ) : error ? (
+          ) : isError ? (
             <div className="flex flex-col items-center justify-center py-12 sm:py-16">
               <div className="bg-rose-100 p-4 rounded-full mb-4">
                 <BiX className="text-rose-600" size={28} />
@@ -80,9 +79,9 @@ export default function NotificationsPage() {
             </div>
           ) : filteredNotifications.length > 0 ? (
             <div className="divide-y divide-gray-100">
-              {filteredNotifications.map((notification: Notification) => (
+              {filteredNotifications.map((n) => (
                 <div
-                  key={notification.id}
+                  key={n.id}
                   className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5 transition-colors duration-200 hover:bg-gray-50 relative"
                 >
                   <div className="flex-shrink-0">
@@ -92,11 +91,11 @@ export default function NotificationsPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm leading-relaxed text-gray-900">
-                      {notification.message}
+                      {n.message}
                     </p>
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
                       <p className="text-xs text-gray-400">
-                        {notification.time}
+                        {n.time}
                       </p>
                     </div>
                   </div>
@@ -115,6 +114,29 @@ export default function NotificationsPage() {
             </div>
           )}
         </div>
+
+        {/* Pagination */}
+        {meta && meta.totalPages > 1 && (
+          <div className="flex justify-center items-center gap-4 py-6">
+            <button
+              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              disabled={!meta.hasPrevious}
+              className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="text-sm">
+              Page {meta.page} of {meta.totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              disabled={!meta.hasNext}
+              className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

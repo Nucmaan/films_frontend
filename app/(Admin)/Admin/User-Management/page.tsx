@@ -19,6 +19,8 @@ const ROLE_COLORS: Record<string, string> = {
   Interpreter: "bg-rose-100 text-rose-800"
 };
 
+const EXPERIENCE_LEVELS = ["Entry Level", "Mid Level", "Senior Level"];
+
 const getInitials = (name: string) => {
   if (!name) return "?";
   const names = name.split(' ');
@@ -133,7 +135,8 @@ const UserForm = ({ user = null, onSubmit, onCancel }: { user?: any; onSubmit: (
     phone: user?.phone || "",
     employee_id: user?.employee_id || "",
     role: user?.role || "User",
-    password: ""
+    password: "",
+    work_experience_level: user?.work_experience_level || "Entry Level",
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState(user?.avatar || "");
@@ -271,6 +274,19 @@ const UserForm = ({ user = null, onSubmit, onCancel }: { user?: any; onSubmit: (
               className="w-full border rounded px-3 py-2"
               disabled={isSubmitting}
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Work Experience</label>
+            <select
+              value={formData.work_experience_level}
+              onChange={(e) => handleChange('work_experience_level', e.target.value)}
+              className="w-full border rounded px-3 py-2"
+              disabled={isSubmitting}
+            >
+              {EXPERIENCE_LEVELS.map(level => (
+                <option key={level} value={level}>{level}</option>
+              ))}
+            </select>
           </div>
           {!user && (
             <div>
@@ -433,6 +449,7 @@ interface User {
   avatar: string;
   joinDate: string;
   password?: string;
+  work_experience_level: string;
 }
 
 export default function UsersPage() {
@@ -464,7 +481,8 @@ export default function UsersPage() {
         month: "short", 
         day: "numeric"
       }),
-      password: user.password || ""
+      password: user.password || "",
+      work_experience_level: user.work_experience_level || "Entry Level",
     }));
   }, [rawUsers]);
 
@@ -592,6 +610,7 @@ export default function UsersPage() {
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">User</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Contact</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Role</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Work Experience</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Employee ID</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Password</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Joined</th>
@@ -631,6 +650,7 @@ export default function UsersPage() {
                         {user.role}
                       </span>
                     </td>
+                    <td className="px-4 py-3 text-sm">{user.work_experience_level || "Entry Level"}</td>
                     <td className="px-4 py-3 text-sm">{user.employee_id || "—"}</td>
                     <td className="px-4 py-3 text-sm">{user.password || "—"}</td>
                     <td className="px-4 py-3 text-sm">{user.joinDate}</td>

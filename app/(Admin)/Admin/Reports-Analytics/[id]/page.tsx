@@ -61,6 +61,7 @@ interface TaskStatusUpdate {
   "SubTask.status": string;
   "SubTask.priority": string;
   "SubTask.estimated_hours": number;
+  "SubTask.time_spent": number;
   "SubTask.description": string;
   "SubTask.deadline": string;
   "SubTask.file_url"?: string;
@@ -230,14 +231,14 @@ export default function UserReportsPage() {
                   <div className="w-2 bg-green-500"></div>
                   <div className="p-6 flex-1">
                     <div className="flex items-center justify-between">
-                      <div className="text-sm font-medium text-gray-500">Est. Hours</div>
+                      <div className="text-sm font-medium text-gray-500">Actual. Hours</div>
                       <div className="p-2 bg-green-50 rounded-full">
                         <Timer className="h-5 w-5 text-green-600" />
                       </div>
                     </div>
                     <div className="mt-4 flex items-end gap-2">
                       <div className="text-3xl font-bold text-gray-900">{totalHours.toFixed(2)}</div>
-                      <div className="text-sm text-gray-500 mb-1">hrs estimated</div>
+                      <div className="text-sm text-gray-500 mb-1">Actual Hours</div>
                     </div>
                   </div>
                 </div>
@@ -257,7 +258,7 @@ export default function UserReportsPage() {
                     </div>
                     <div className="mt-4 flex items-end gap-2">
                       <div className="text-3xl font-bold text-gray-900">{totalSpentTime.toFixed(2)}</div>
-                      <div className="text-sm text-gray-500 mb-1">hrs spent</div>
+                      <div className="text-sm text-gray-500 mb-1">Spent Time</div>
                     </div>
                   </div>
                 </div>
@@ -400,8 +401,8 @@ export default function UserReportsPage() {
                       <TableHead className="w-12 font-semibold text-gray-600">#</TableHead>
                       <TableHead className="font-semibold text-gray-600">Task</TableHead>
                       <TableHead className="font-semibold text-gray-600">Status</TableHead>
-                      <TableHead className="font-semibold text-gray-600">Estimated</TableHead>
-                      <TableHead className="font-semibold text-gray-600">Spent</TableHead>
+                      <TableHead className="font-semibold text-gray-600">Actual Time</TableHead>
+                      <TableHead className="font-semibold text-gray-600">Spent Time</TableHead>
                       <TableHead className="font-semibold text-gray-600">Rate/Hr</TableHead>
                       <TableHead className="font-semibold text-gray-600">Total</TableHead>
                       <TableHead className="font-semibold text-gray-600">Deadline</TableHead>
@@ -484,13 +485,13 @@ export default function UserReportsPage() {
                             <TableCell>
                               <div className="flex items-center gap-1.5">
                                 <CalendarClock className="h-3.5 w-3.5 text-gray-500" />
-                                <span className="font-medium">{task["SubTask.estimated_hours"]} hrs</span>
+                                <span className="font-medium">{task["SubTask.estimated_hours"]} </span>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1.5">
                                 <Timer className="h-3.5 w-3.5 text-gray-500" />
-                                <span className="font-medium">{spentTime.toFixed(2)} hrs</span>
+                                <span className="font-medium">{task["SubTask.time_spent"]} </span>
                               </div>
                             </TableCell>
                             <TableCell>

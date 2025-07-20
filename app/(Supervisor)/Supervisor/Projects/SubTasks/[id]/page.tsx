@@ -40,6 +40,7 @@ interface Subtask {
   completed_at: string | null;
   createdAt?: string;
   updatedAt?: string;
+  time_spent?: string;
 }
 
 interface User {
@@ -162,6 +163,7 @@ export default function Page() {
     start_time: string;
     file_url: string[];
     assigned_to: number;
+    time_spent?: string;
   }>({
     title: "",
     description: "",
@@ -171,6 +173,7 @@ export default function Page() {
     start_time: "",
     file_url: [],
     assigned_to: 0,
+    time_spent: "",
   });
   const [editSubtask, setEditSubtask] = useState<{
     title: string;
@@ -180,6 +183,7 @@ export default function Page() {
     deadline: string;
     estimated_hours: number;
     start_time: string;
+    time_spent?: string;
   }>({
     title: "",
     description: "",
@@ -188,6 +192,7 @@ export default function Page() {
     deadline: "",
     estimated_hours: 0,
     start_time: "",
+    time_spent: "",
   });
   const userTask = userAuth((state) => state.user);
   const [viewSubtaskId, setViewSubtaskId] = useState<number | null>(null);
@@ -201,6 +206,7 @@ export default function Page() {
     estimated_hours: number;
     start_time: string;
     description?: string;
+    time_spent?: string;
   }>({
     title: "",
     assigned_to: 0,
@@ -209,6 +215,7 @@ export default function Page() {
     estimated_hours: 0,
     start_time: "",
     description: "",
+    time_spent: "",
   });
   const [inlineSelectedFiles, setInlineSelectedFiles] =
     useState<FileList | null>(null);
@@ -441,6 +448,7 @@ export default function Page() {
         start_time: editSubtask.start_time
           ? new Date(editSubtask.start_time).toISOString()
           : null,
+        time_spent: editSubtask.time_spent || undefined,
       };
 
       const response = await axios.put(
@@ -514,6 +522,10 @@ export default function Page() {
         });
       }
 
+      if (newSubtask.time_spent) {
+        formData.append("time_spent", newSubtask.time_spent);
+      }
+
       const response = await axios.post(
         `${taskService}/api/subtasks/create`,
         formData,
@@ -582,6 +594,7 @@ export default function Page() {
           start_time: "",
           file_url: [],
           assigned_to: 0,
+          time_spent: "",
         });
         setSelectedFiles(null);
         setShowAddSubtaskForm(false);
@@ -620,6 +633,7 @@ export default function Page() {
         start_time: "",
         file_url: [],
         assigned_to: 0,
+        time_spent: "",
       });
       setSelectedFiles(null);
       setShowAddSubtaskForm(false);
@@ -688,6 +702,10 @@ export default function Page() {
         });
       }
 
+      if (inlineNewSubtask.time_spent) {
+        formData.append("time_spent", inlineNewSubtask.time_spent);
+      }
+
       const response = await axios.post(
         `${taskService}/api/subtasks/create`,
         formData,
@@ -753,6 +771,7 @@ export default function Page() {
           estimated_hours: 0,
           start_time: "",
           description: "",
+          time_spent: "",
         });
         setInlineSelectedFiles(null);
         setShowInlineForm(false);
@@ -793,6 +812,7 @@ export default function Page() {
         estimated_hours: 0,
         start_time: "",
         description: "",
+        time_spent: "",
       });
       setInlineSelectedFiles(null);
       setShowInlineForm(false);
@@ -873,7 +893,13 @@ export default function Page() {
                       scope="col"
                       className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
                     >
-                      Estimated Hours
+                      Actual Time
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
+                    >
+                      Spent Time
                     </th>
                     <th scope="col" className="px-4 py-3 relative w-28">
                       <span className="sr-only">Actions</span>
@@ -946,7 +972,13 @@ export default function Page() {
                       scope="col"
                       className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
                     >
-                      Estimated Hours
+                      Actual Time
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
+                    >
+                      Spent Time
                     </th>
                     <th scope="col" className="px-4 py-3 relative w-28">
                       <span className="sr-only">Actions</span>
@@ -1041,7 +1073,17 @@ export default function Page() {
                           <FiClock className="mr-2 text-gray-500" size={16} />
                           <p className="text-gray-900">
                             {subtask.estimated_hours
-                              ? `${subtask.estimated_hours} hours`
+                              ? `${subtask.estimated_hours} `
+                              : "Not specified"}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap w-1/6">
+                        <div className="py-2.5 flex items-center">
+                          <FiClock className="mr-2 text-gray-500" size={16} />
+                          <p className="text-gray-900">
+                            {subtask.time_spent
+                              ? `${subtask.time_spent} `
                               : "Not specified"}
                           </p>
                         </div>
@@ -1077,6 +1119,7 @@ export default function Page() {
                                         .toISOString()
                                         .slice(0, 16)
                                     : "",
+                                  time_spent: subtaskToEdit.time_spent || "",
                                 });
                                 setEditingSubtaskId(subtask.id);
                               }
@@ -1183,7 +1226,7 @@ export default function Page() {
                               type="number"
                               min="0"
                               step="0.01"
-                              placeholder="Est. hours"
+                              placeholder="Actual. Time"
                               value={inlineNewSubtask.estimated_hours || ""}
                               onChange={(e) =>
                                 setInlineNewSubtask({
@@ -1241,6 +1284,21 @@ export default function Page() {
                               className="w-32 p-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#ff4e00] focus:border-[#ff4e00]"
                             />
 
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="Spent Time"
+                              value={inlineNewSubtask.time_spent || ""}
+                              onChange={(e) =>
+                                setInlineNewSubtask({
+                                  ...inlineNewSubtask,
+                                  time_spent: e.target.value,
+                                })
+                              }
+                              className="w-24 p-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#ff4e00] focus:border-[#ff4e00]"
+                            />
+
                             <div className="flex space-x-2">
                               <button
                                 onClick={handleInlineAddSubtask}
@@ -1271,6 +1329,7 @@ export default function Page() {
                                     estimated_hours: 0,
                                     start_time: "",
                                     description: "",
+                                    time_spent: "",
                                   });
                                   setInlineSelectedFiles(null);
                                 }}
@@ -1568,6 +1627,7 @@ export default function Page() {
                                       .toISOString()
                                       .slice(0, 16)
                                   : "",
+                                time_spent: subtaskToEdit.time_spent || "",
                               });
                               setEditingSubtaskId(subtask.id);
                             }
@@ -1685,7 +1745,7 @@ export default function Page() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Estimated Hours
+                    Actual Time
                     </label>
                     <input
                       type="number"
@@ -1767,6 +1827,26 @@ export default function Page() {
                     className="w-full p-2.5 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#ff4e00] focus:border-[#ff4e00]"
                     placeholder="Enter subtask description"
                     rows={4}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Time Spent (hours)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editSubtask.time_spent || ""}
+                    onChange={(e) =>
+                      setEditSubtask({
+                        ...editSubtask,
+                        time_spent: e.target.value,
+                      })
+                    }
+                    className="w-full p-2.5 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#ff4e00] focus:border-[#ff4e00]"
+                    placeholder="e.g. 2.5"
                   />
                 </div>
 
@@ -2078,6 +2158,7 @@ export default function Page() {
                     start_time: "",
                     file_url: [],
                     assigned_to: 0,
+                    time_spent: "",
                   });
                 }}
                 className="text-gray-400 hover:text-gray-600"
@@ -2263,6 +2344,25 @@ export default function Page() {
                 <p className="text-xs text-gray-500 mt-1">
                   Upload any relevant files for this subtask
                 </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Time Spent (hours)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={newSubtask.time_spent}
+                  onChange={(e) =>
+                    setNewSubtask({
+                      ...newSubtask,
+                      time_spent: e.target.value,
+                    })
+                  }
+                  className="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  placeholder="e.g. 2.5"
+                />
               </div>
               <div className="flex justify-end space-x-2 pt-2">
                 <button
