@@ -3,9 +3,8 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import ProjectKanbanSkeleton from "@/components/ProjectKanbanSkeleton";
-
 import LoadingReuse from "@/components/LoadingReuse";
+import ProjectKanbanSkeleton from "@/components/ProjectKanbanSkeleton";
 import { FiEdit, FiEye, FiTrash2, FiCalendar, FiClock, FiFlag, FiX, FiPlus, FiSearch, FiUpload, FiImage, FiFilter, FiInfo, FiLayers } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import userAuth from "@/myStore/userAuth";
@@ -356,15 +355,15 @@ export default function ProjectsPage() {
     router.push(`/Supervisor/Projects/Documentary/${projectId}`);
   };
 
-  // Handle deleting a project
+  
   const handleDeleteProject = async (projectId: number) => {
     try {
       setIsDeleting(true);
-      const response = await Project.deleteProject(projectId);
+      const response = await Project.deleteProject(projectId,page);
       
       if (response.data.success) {
         toast.success("Project deleted successfully");
-        refreshProjects(); // Refresh project list using SWR mutate
+        refreshProjects(); //  
         setDeletingProject(null);
       } else {
         toast.error(response.data.message || "Failed to delete project");
@@ -437,8 +436,7 @@ export default function ProjectsPage() {
         toast.error("File size must be less than 5MB");
         return;
       }
-      
-      // Validate specific image types
+     
       const allowedTypes = [
         "image/jpeg",
         "image/png", 
@@ -453,7 +451,7 @@ export default function ProjectsPage() {
       
       setSelectedFile(file);
       
-      // Create preview
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         setPreviewImage(e.target?.result as string);
@@ -475,7 +473,7 @@ export default function ProjectsPage() {
     try {
       const formData = new FormData(event.currentTarget);
       
-      // Validate required fields
+       
       const name = formData.get('name') as string;
       const description = formData.get('description') as string;
       const deadline = formData.get('deadline') as string;
@@ -488,14 +486,11 @@ export default function ProjectsPage() {
         return;
       }
 
-      // Automatically set project_type to "Documentary" for Documentary page
-      formData.append('project_type', 'Documentary');
+       formData.append('project_type', 'Documentary');
       
-      // Add form data
-      formData.append('created_by', user?.id?.toString() || '');
+       formData.append('created_by', user?.id?.toString() || '');
       
-      // Add image if selected
-      if (selectedFile) {
+       if (selectedFile) {
         formData.append('project_image', selectedFile);
       }
 
@@ -508,7 +503,7 @@ export default function ProjectsPage() {
         if (formRef.current) {
           formRef.current.reset();
         }
-        refreshProjects(); // Refresh the projects list using SWR mutate
+        refreshProjects();  
       } else {
         toast.error(response.data.message || "Failed to create project");
       }
@@ -539,8 +534,7 @@ export default function ProjectsPage() {
           
           <form ref={formRef} onSubmit={handleAddProject} className="p-4">
             <div className="space-y-3">
-              {/* Project Image Upload */}
-              <div>
+               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Project Image</label>
                 <div className="mt-1">
                   <div
@@ -675,8 +669,7 @@ export default function ProjectsPage() {
     );
   };
 
-  // Show loading state
-  if (isLoading) {
+   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <ProjectKanbanSkeleton />
@@ -684,8 +677,7 @@ export default function ProjectsPage() {
     );
   }
 
-  // Show error state
-  if (error) {
+   if (error) {
     return (
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="text-center py-12">
@@ -737,8 +729,7 @@ export default function ProjectsPage() {
           </motion.button>
         </div>
 
-        {/* Improved search and filter bar */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-grow relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -800,8 +791,7 @@ export default function ProjectsPage() {
           </div>
         </div>
 
-        {/* Kanban Board Layout: 4 categories with new order */}
-        <div className="flex gap-6 overflow-x-auto mt-6">
+         <div className="flex gap-6 overflow-x-auto mt-6">
           {[
             { key: "Planning", label: "PLANNING", color: "text-purple-600 bg-purple-50 border-t-2 border-purple-400", countColor: "text-purple-600" },
             { key: "In Progress", label: "IN PROGRESS", color: "text-blue-600 bg-blue-50 border-t-2 border-blue-400", countColor: "text-blue-600" },
@@ -831,8 +821,7 @@ export default function ProjectsPage() {
                       />
                     ))
                 )}
-                {/* Add New Button */}
-                <button
+                 <button
                   className="w-full mt-2 py-2 border border-dashed rounded text-gray-400 hover:bg-gray-50"
                   onClick={() => setShowAddModal(true)}
                 >
@@ -844,8 +833,7 @@ export default function ProjectsPage() {
         </div>
       </div>
       
-      {/* Modals */}
-      {deletingProject && (
+       {deletingProject && (
         <DeleteConfirmModal 
           project={deletingProject}
           onClose={() => setDeletingProject(null)}
@@ -859,8 +847,7 @@ export default function ProjectsPage() {
         />
       )}
 
-      {/* Pagination Controls */}
-      <div className="flex justify-center items-center gap-4 mt-8">
+       <div className="flex justify-center items-center gap-4 mt-8">
         <button
           className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
           onClick={() => setPage((p) => Math.max(1, p - 1))}

@@ -3,9 +3,8 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import ProjectKanbanSkeleton from "@/components/ProjectKanbanSkeleton";
-
 import LoadingReuse from "@/components/LoadingReuse";
+import ProjectKanbanSkeleton from "@/components/ProjectKanbanSkeleton";
 import { FiEdit, FiEye, FiTrash2, FiCalendar, FiClock, FiFlag, FiX, FiPlus, FiSearch, FiUpload, FiImage, FiFilter, FiInfo, FiLayers } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import userAuth from "@/myStore/userAuth";
@@ -124,8 +123,7 @@ const KanbanCard = ({
   
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
-      {/* Color Bar based on project status */}
-      <div className={`h-1.5 w-full ${
+       <div className={`h-1.5 w-full ${
         project.status === "Pending" ? "bg-yellow-400" : 
         project.status === "In Progress" ? "bg-blue-400" : 
         project.status === "Completed" ? "bg-green-400" : 
@@ -133,8 +131,7 @@ const KanbanCard = ({
         "bg-gray-300"
       }`}></div>
       
-      {/* Project Image */}
-      <div className="w-full aspect-video overflow-hidden">
+       <div className="w-full aspect-video overflow-hidden">
         {getImageUrl(project) ? (
           <img
             src={getImageUrl(project)}
@@ -146,11 +143,9 @@ const KanbanCard = ({
         ) : null}
       </div>
       
-      {/* Project Info */}
-      <div className="p-5">
+       <div className="p-5">
         <div className="flex justify-between items-start mb-4">
-          {/* Project Title and Type */}
-          <div>
+           <div>
             <h3 className="font-medium text-gray-800 text-lg mb-1" title={project.name}>
               {project.name}
             </h3>
@@ -162,8 +157,7 @@ const KanbanCard = ({
             </div>
           </div>
           
-          {/* Status Badge */}
-          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+           <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
             project.status === "Pending" ? "bg-yellow-100 text-yellow-800" :
             project.status === "In Progress" ? "bg-blue-100 text-blue-800" :
             project.status === "Completed" ? "bg-green-100 text-green-800" :
@@ -174,12 +168,9 @@ const KanbanCard = ({
           </span>
         </div>
         
-        {/* Dates */}
-        <div className="space-y-3 mb-4">
-          {/* Date Display */}
-          <div className="flex flex-col text-sm text-gray-600 gap-2">
-            {/* Created Date */}
-            <div className="flex items-center gap-1.5">
+         <div className="space-y-3 mb-4">
+           <div className="flex flex-col text-sm text-gray-600 gap-2">
+             <div className="flex items-center gap-1.5">
               <svg className="text-[#ff4e00]/70" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
                 <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -187,8 +178,7 @@ const KanbanCard = ({
               <span className="text-gray-500">Created: {formatDate(project.created_at || project.start_date)}</span>
             </div>
             
-            {/* Deadline Date */}
-            <div className="flex items-center gap-1.5">
+             <div className="flex items-center gap-1.5">
               <svg className="text-[#ff4e00]/70" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
                 <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -207,14 +197,12 @@ const KanbanCard = ({
           </div>
         </div>
         
-        {/* Priority */}
-        <div className="flex items-center gap-2 mb-4">
+         <div className="flex items-center gap-2 mb-4">
           <div className={`w-2 h-2 rounded-full ${getPriorityDot(project.priority)}`}></div>
           <span className="text-sm text-gray-600">{project.priority} Priority</span>
         </div>
         
-        {/* Task count for this project */}
-        <div className="flex items-center gap-2 mb-4">
+         <div className="flex items-center gap-2 mb-4">
           <div className="flex items-center text-sm text-gray-600">
             <svg className="w-4 h-4 mr-1.5 text-[#ff4e00]/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
@@ -223,8 +211,7 @@ const KanbanCard = ({
           </div>
         </div>
         
-        {/* Actions */}
-        <div className="flex gap-2">
+         <div className="flex gap-2">
           <button
             onClick={onView}
             className="flex-1 bg-[#ff4e00] text-white py-2 px-3 rounded-lg hover:bg-[#ff4e00]/90 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
@@ -274,8 +261,7 @@ export default function ProjectsPage() {
   const user = userAuth((state) => state.user);
   const [page, setPage] = useState(1);
 
-  // Use paginated SWR hook
-  const {
+   const {
     projects: dramaProjects,
     total,
     page: currentPage,
@@ -314,14 +300,12 @@ export default function ProjectsPage() {
       matchesPriority = project.priority === selectedPriority;
     }
 
-    // Filter by channel
-    let matchesChannel = true;
+     let matchesChannel = true;
     if (selectedChannel !== "All") {
       if (project.channel) {
         matchesChannel = project.channel === selectedChannel;
       } else {
-        // If no channel specified, only show when "unknown" is selected
-        matchesChannel = selectedChannel === "unknown";
+         matchesChannel = selectedChannel === "unknown";
       }
     }
 
@@ -342,25 +326,22 @@ export default function ProjectsPage() {
     };
   };
 
-  // Update the handleViewProject function to navigate to the project detail page
-  const handleViewProject = (projectId: number) => {
+   const handleViewProject = (projectId: number) => {
     router.push(`/Supervisor/Projects/${projectId}`);
   };
 
-  // Add a new function to handle edit navigation
-  const handleEditProject = (projectId: number) => {
+   const handleEditProject = (projectId: number) => {
     router.push(`/Supervisor/Projects/DRAMA/${projectId}`);
   };
 
-  // Handle deleting a project
-  const handleDeleteProject = async (projectId: number) => {
+   const handleDeleteProject = async (projectId: number) => {
     try {
       setIsDeleting(true);
-      const response = await Project.deleteProject(projectId);
+      const response = await Project.deleteProject(projectId,page);
       
               if (response.data.success) {
           toast.success("Project deleted successfully");
-          refreshProjects(); // Refresh project list
+          refreshProjects(); 
           setDeletingProject(null);
         } else {
         toast.error(response.data.message || "Failed to delete project");
@@ -434,8 +415,7 @@ export default function ProjectsPage() {
         return;
       }
       
-      // Validate specific image types
-      const allowedTypes = [
+       const allowedTypes = [
         "image/jpeg",
         "image/png", 
         "image/jpg",
@@ -449,8 +429,7 @@ export default function ProjectsPage() {
       
       setSelectedFile(file);
       
-      // Create preview
-      const reader = new FileReader();
+       const reader = new FileReader();
       reader.onload = (e) => {
         setPreviewImage(e.target?.result as string);
       };
@@ -471,8 +450,7 @@ export default function ProjectsPage() {
     try {
       const formData = new FormData(event.currentTarget);
       
-      // Validate required fields
-      const name = formData.get('name') as string;
+       const name = formData.get('name') as string;
       const description = formData.get('description') as string;
       const deadline = formData.get('deadline') as string;
       const status = formData.get('status') as string;
@@ -484,14 +462,11 @@ export default function ProjectsPage() {
         return;
       }
 
-      // Automatically set project_type to "DRAMA" for Drama page
-      formData.append('project_type', 'DRAMA');
+       formData.append('project_type', 'DRAMA');
       
-      // Add form data
-      formData.append('created_by', user?.id?.toString() || '');
+       formData.append('created_by', user?.id?.toString() || '');
       
-      // Add image if selected
-      if (selectedFile) {
+       if (selectedFile) {
         formData.append('project_image', selectedFile);
       }
 
@@ -504,13 +479,12 @@ export default function ProjectsPage() {
         if (formRef.current) {
           formRef.current.reset();
         }
-        refreshProjects(); // Refresh the projects list
+        refreshProjects();  
       } else {
         toast.error(response.data.message || "Failed to create project");
       }
     } catch (error: any) {
-      console.error('Error creating project:', error);
-      const message = error.response?.data?.message || "Failed to create project";
+       const message = error.response?.data?.message || "Failed to create project";
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -535,8 +509,7 @@ export default function ProjectsPage() {
           
           <form ref={formRef} onSubmit={handleAddProject} className="p-4">
             <div className="space-y-3">
-              {/* Project Image Upload */}
-              <div>
+               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Project Image</label>
                 <div className="mt-1">
                   <div
@@ -671,8 +644,7 @@ export default function ProjectsPage() {
     );
   };
 
-  // Show loading state
-  if (isLoading) {
+   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <ProjectKanbanSkeleton />
@@ -680,8 +652,7 @@ export default function ProjectsPage() {
     );
   }
 
-  // Show error state
-  if (error) {
+   if (error) {
     return (
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="text-center py-12">
@@ -733,8 +704,7 @@ export default function ProjectsPage() {
           </motion.button>
         </div>
 
-        {/* Improved search and filter bar */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-grow relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -796,8 +766,7 @@ export default function ProjectsPage() {
           </div>
         </div>
 
-        {/* Kanban Board Layout: 4 categories with new order */}
-        <div className="flex gap-6 overflow-x-auto mt-6">
+         <div className="flex gap-6 overflow-x-auto mt-6">
           {[
             { key: "Planning", label: "PLANNING", color: "text-purple-600 bg-purple-50 border-t-2 border-purple-400", countColor: "text-purple-600" },
             { key: "In Progress", label: "IN PROGRESS", color: "text-blue-600 bg-blue-50 border-t-2 border-blue-400", countColor: "text-blue-600" },
@@ -827,8 +796,7 @@ export default function ProjectsPage() {
                       />
                     ))
                 )}
-                {/* Add New Button */}
-                <button
+                 <button
                   className="w-full mt-2 py-2 border border-dashed rounded text-gray-400 hover:bg-gray-50"
                   onClick={() => setShowAddModal(true)}
                 >
@@ -840,8 +808,7 @@ export default function ProjectsPage() {
         </div>
       </div>
       
-      {/* Modals */}
-      {deletingProject && (
+       {deletingProject && (
         <DeleteConfirmModal 
           project={deletingProject}
           onClose={() => setDeletingProject(null)}
@@ -855,8 +822,7 @@ export default function ProjectsPage() {
         />
       )}
 
-      {/* Pagination Controls */}
-      <div className="flex justify-center items-center gap-4 mt-8">
+       <div className="flex justify-center items-center gap-4 mt-8">
         <button
           className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
           onClick={() => setPage((p) => Math.max(1, p - 1))}

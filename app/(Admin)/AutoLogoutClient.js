@@ -10,8 +10,7 @@ export default function AutoLogoutClient() {
   const router = useRouter();
   const logoutUser = userAuth((state) => state.logoutUser);
 
-  // Pass a callback to the hook to show the modal
-  useAutoLogout(40, () => setShowModal(true));
+   useAutoLogout(40, () => setShowModal(true));
 
   const handleConfirm = () => {
     logoutUser();

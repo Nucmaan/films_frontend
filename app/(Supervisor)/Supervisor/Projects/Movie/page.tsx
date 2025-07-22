@@ -4,7 +4,6 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import ProjectKanbanSkeleton from "@/components/ProjectKanbanSkeleton";
-
 import LoadingReuse from "@/components/LoadingReuse";
 import { FiEdit, FiEye, FiTrash2, FiCalendar, FiClock, FiFlag, FiX, FiPlus, FiSearch, FiUpload, FiImage, FiFilter, FiInfo, FiLayers } from "react-icons/fi";
 import { useRouter } from "next/navigation";
@@ -374,7 +373,7 @@ export default function ProjectsPage() {
   const handleDeleteProject = async (projectId: number) => {
     try {
       setIsDeleting(true);
-      const response = await Project.deleteProject(projectId);
+      const response = await Project.deleteProject(projectId,page);
       
       if (response.data.success) {
         toast.success("Project deleted successfully");

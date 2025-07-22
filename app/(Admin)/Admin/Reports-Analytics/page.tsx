@@ -107,8 +107,7 @@ export default function ReportsAnalyticsPage() {
 
   const monthOptions = getMonthOptions();
 
-  // Filter completedTasks by selected month
-  const filterTasksByMonth = (tasks: CompletedTask[]) => {
+   const filterTasksByMonth = (tasks: CompletedTask[]) => {
     if (selectedMonth === "current") {
       return tasks;
     }
@@ -134,8 +133,7 @@ export default function ReportsAnalyticsPage() {
     }
   };
 
-  // Calculate stats for each user
-  const usersWithStats: UserWithStats[] = users.map((user: UserWithCompletedTasks) => {
+   const usersWithStats: UserWithStats[] = users.map((user: UserWithCompletedTasks) => {
     const userCompletedTasks = filterTasksByMonth(user.completedTasks);
     const totalHours = userCompletedTasks.reduce(
       (sum, task) => sum + (task["SubTask.estimated_hours"] || 0),
@@ -153,8 +151,7 @@ export default function ReportsAnalyticsPage() {
     };
   });
 
-  // Filter users by search and status
-  const filteredUsers = usersWithStats
+   const filteredUsers = usersWithStats
     .filter(user => {
       const matchesSearch = searchQuery === "" ||
         user.name.toLowerCase().includes(searchQuery.toLowerCase());

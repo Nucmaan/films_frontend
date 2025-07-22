@@ -10,18 +10,24 @@ import {
   FiCalendar,
   FiClock,
   FiUser,
-  FiPlus,
-  FiX,
+   FiX,
   FiCheckCircle,
-  FiAlertCircle,
-  FiFile,
+   FiFile,
   FiPaperclip,
   FiUsers,
   FiCheck,
 } from "react-icons/fi";
 import userAuth from "@/myStore/userAuth";
-import useSWR from 'swr';
-import SubtasksTableSkeleton from '@/components/SubtasksTableSkeleton';
+import useSWR from "swr";
+import SubtasksTableSkeleton from "@/components/SubtasksTableSkeleton";
+import {
+  getSubtasksWithAssignments,
+  getUsers,
+  createSubtask,
+  updateSubtask,
+  deleteSubtask,
+  assignSubtask,
+} from "@/lib/project/SubTaskData";
 
 interface Subtask {
   id: number;
@@ -223,169 +229,44 @@ export default function Page() {
   const taskService = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
   const userService = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
 
-  // SWR fetcher for users
-  const fetcher = (url: string) => fetch(url).then(res => res.json());
-  const { data: usersData } = useSWR(
-    `${userService}/api/auth/users`,
-    fetcher
-  );
+  // SWR for users
+  const {
+    data: usersData,
+    isLoading: usersLoading,
+    error: usersError,
+  } = useSWR(userService ? ["users", userService] : null, ([, userService]) => getUsers(userService));
 
-  // Set users state from SWR
-  useEffect(() => {
+   const {
+    data: subtasksData,
+    isLoading: subtasksLoading,
+    error: subtasksError,
+    mutate: mutateSubtasks,
+  } = useSWR(taskService && id ? ["subtasks", taskService, id] : null, ([, taskService, id]) => getSubtasksWithAssignments(taskService, id));
+
+   useEffect(() => {
     if (usersData) {
-      const users = usersData.users || usersData;
-      setUsers(Array.isArray(users) ? users.filter(u => u.role !== 'Admin' && u.role !== 'Supervisor') : []);
+      setUsers(usersData);
     }
   }, [usersData]);
 
-  const fetchSubtasks = async () => {
-    if (!id) {
-      setLoading(false);
-      return;
+   useEffect(() => {
+    if (subtasksData) {
+      setSubtasks(subtasksData);
     }
-
-    try {
-      setLoading(true);
-
-      try {
-        const res = await axios.get(`${taskService}/api/subtasks/task/${id}`);
-       // console.log("API Response:", res.data);
-
-        if (!res.data || !Array.isArray(res.data)) {
-          console.log(
-            "No subtasks found or invalid response format:",
-            res.data
-          );
-          setSubtasks([]);
-          return;
-        }
-
-        const parsedSubtasks = res.data.map((item: any) => ({
-          ...item,
-          file_url: (() => {
-            if (!item.file_url) return [];
-            if (typeof item.file_url === "string") {
-              // Check if it looks like JSON array
-              if (item.file_url.trim().startsWith('[')) {
-                try {
-                  return JSON.parse(item.file_url);
-                } catch (e) {
-                  return [item.file_url]; // If parsing fails, treat as single URL
-                }
-              } else {
-                // It's a plain URL string
-                return [item.file_url];
-              }
-            }
-            // If it's already an array
-            return Array.isArray(item.file_url) ? item.file_url : [item.file_url];
-          })(),
-          assigned_to: item.assigned_to || 0,
-          assigned_user: item.assigned_user || null,
-          profile_image: item.profile_image || null,
-        })) as Subtask[];
-
-        console.log("Parsed subtasks:", parsedSubtasks);
-        setSubtasks(parsedSubtasks);
-      } catch (fetchError: any) {
-        console.log("Could not fetch subtasks:", fetchError.message);
-        setSubtasks([]);
-        return;
-      }
-
-      try {
-        const checkEndpoint = await axios
-          .head(`${taskService}/api/task-assignment/allTaskStatusUpdates`)
-          .catch(() => ({ status: 404 }));
-
-        if (checkEndpoint.status === 200) {
-          const assignmentsResponse = await axios.get(
-            `${taskService}/api/task-assignment/allTaskStatusUpdates`
-          );
-
-          if (
-            assignmentsResponse.data &&
-            assignmentsResponse.data.statusUpdates
-          ) {
-            const latestAssignments =
-              assignmentsResponse.data.statusUpdates.reduce(
-                (acc: any, curr: any) => {
-                  if (
-                    !acc[curr.task_id] ||
-                    new Date(curr.updated_at) >
-                      new Date(acc[curr.task_id].updated_at)
-                  ) {
-                    acc[curr.task_id] = {
-                      assigned_user: curr.assigned_user,
-                      profile_image: curr.profile_image,
-                      updated_by: curr.updated_by,
-                    };
-                  }
-                  return acc;
-                },
-                {}
-              );
-
-            setSubtasks((prev) =>
-              prev.map((subtask) => {
-                const assignment = latestAssignments[subtask.id];
-                if (assignment) {
-                  return {
-                    ...subtask,
-                    assigned_to: assignment.updated_by || subtask.assigned_to,
-                    assigned_user:
-                      assignment.assigned_user || subtask.assigned_user,
-                    profile_image:
-                      assignment.profile_image || subtask.profile_image,
-                  } as Subtask;
-                }
-                return subtask;
-              })
-            );
-          }
-        } else {
-          console.log("Assignments endpoint not available - skipping");
-        }
-      } catch (assignError) {
-        console.log("Error fetching assignments (non-critical):", assignError);
-      }
-    } catch (error) {
-      console.log("General error in fetchSubtasks:", error);
-
-      setSubtasks([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (id) {
-      fetchSubtasks();
-    }
-  }, [id]);
+    setLoading(subtasksLoading);
+  }, [subtasksData, subtasksLoading]);
 
   const handleAssignTask = async (subtaskId: number, userId: number) => {
     try {
       setIsAssigning(subtaskId);
-
       const assignedUser = users.find((u) => u.id === userId);
-
       try {
-        const response = await axios.post(
-          `${taskService}/api/task-assignment/assignTask`,
-          {
-            task_id: subtaskId,
-            user_id: userId,
-          }
-        );
-
+        await assignSubtask(taskService, subtaskId, userId, userTask?.id);
         toast.success("Task assigned successfully");
       } catch (error: any) {
         console.error("Error in task assignment API call:", error);
-
         console.log("Updating UI optimistically despite API error");
       }
-
       setSubtasks((prev) =>
         prev.map((subtask) =>
           subtask.id === subtaskId
@@ -398,8 +279,7 @@ export default function Page() {
             : subtask
         )
       );
-
-      setTimeout(fetchSubtasks, 500);
+      setTimeout(mutateSubtasks, 500);
     } catch (error: any) {
       console.error("General error in assignment process:", error);
       toast.error(
@@ -415,26 +295,20 @@ export default function Page() {
     if (confirm("Are you sure you want to delete this subtask?")) {
       try {
         setIsDeletingSubtask(subtaskId);
-        const response = await axios.delete(
-          `${taskService}/api/subtasks/DeleteSubTask/${subtaskId}`
-        );
-
-        if (response.status === 200 || response.status === 204) {
-          toast.success("Subtask deleted successfully");
-          setSubtasks((prev) => prev.filter((sub) => sub.id !== subtaskId));
-        }
+        await deleteSubtask(taskService, subtaskId);
+        toast.success("Subtask deleted successfully");
+        setSubtasks((prev) => prev.filter((sub) => sub.id !== subtaskId));
       } catch (error) {
-        console.error("Failed to delete subtask:", error);
-        toast.error("Failed to delete subtask");
+         toast.error("Failed to delete subtask");
       } finally {
         setIsDeletingSubtask(null);
+        setTimeout(mutateSubtasks, 500);
       }
     }
   };
 
   const handleUpdateSubtask = async () => {
     if (!editingSubtaskId) return;
-
     try {
       const subtaskData = {
         title: editSubtask.title,
@@ -450,28 +324,18 @@ export default function Page() {
           : null,
         time_spent: editSubtask.time_spent || undefined,
       };
-
-      const response = await axios.put(
-        `${taskService}/api/subtasks/updateSubTask/${editingSubtaskId}`,
-        subtaskData
+      await updateSubtask(taskService, editingSubtaskId, subtaskData);
+      toast.success("Subtask updated successfully");
+      setSubtasks(
+        (prev) =>
+          prev.map((subtask) =>
+            subtask.id === editingSubtaskId
+              ? { ...subtask, ...(subtaskData as Partial<Subtask>) }
+              : subtask
+          ) as Subtask[]
       );
-
-      if (response.status === 200 || response.status === 204) {
-        toast.success("Subtask updated successfully");
-
-        setSubtasks(
-          (prev) =>
-            prev.map((subtask) =>
-              subtask.id === editingSubtaskId
-                ? { ...subtask, ...(subtaskData as Partial<Subtask>) }
-                : subtask
-            ) as Subtask[]
-        );
-
-        setEditingSubtaskId(null);
-
-        fetchSubtasks();
-      }
+      setEditingSubtaskId(null);
+      mutateSubtasks();
     } catch (error: any) {
       console.error("Error updating subtask:", error);
       toast.error(
@@ -486,144 +350,43 @@ export default function Page() {
       toast.error("Title is required");
       return;
     }
-
     if (!id) {
       toast.error("Task ID is missing");
       return;
     }
-
     try {
       setIsCreatingSubtask(true);
-
       const formData = new FormData();
       formData.append("task_id", id.toString());
       formData.append("title", newSubtask.title);
       formData.append("description", newSubtask.description || "");
       formData.append("status", newSubtask.status);
       formData.append("priority", newSubtask.priority);
-
       if (newSubtask.start_time) {
-        const formattedStartTime = new Date(
-          newSubtask.start_time
-        ).toISOString();
+        const formattedStartTime = new Date(newSubtask.start_time).toISOString();
         formData.append("start_time", formattedStartTime);
         formData.append("deadline", formattedStartTime);
       }
-
       formData.append("estimated_hours", newSubtask.estimated_hours.toString());
-
       if (newSubtask.assigned_to > 0) {
         formData.append("assigned_to", newSubtask.assigned_to.toString());
       }
-
       if (selectedFiles && selectedFiles.length > 0) {
         Array.from(selectedFiles).forEach((file) => {
           formData.append("file_url", file);
         });
       }
-
       if (newSubtask.time_spent) {
         formData.append("time_spent", newSubtask.time_spent);
       }
-
-      const response = await axios.post(
-        `${taskService}/api/subtasks/create`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.data || (response.status >= 200 && response.status < 300)) {
-        toast.success("Subtask created successfully");
-
-        if (response.data && response.data.id && newSubtask.assigned_to > 0) {
-          try {
-            const assignedUser = users.find(
-              (u) => u.id === newSubtask.assigned_to
-            );
-            console.log(
-              "Attempting to assign task to user:",
-              assignedUser?.name || "Unknown"
-            );
-
-            console.log("Assigning with:", {
-              task_id: response.data.id,
-              user_id: newSubtask.assigned_to,
-              assignedby_id: userTask?.id
-            });
-
-            await axios
-              .post(`${taskService}/api/task-assignment/assignTask`, {
-                task_id: response.data.id,
-                user_id: newSubtask.assigned_to,
-                assignedby_id: userTask?.id
-              })
-              .then(() => {
-                console.log("Task assignment API call successful");
-              })
-              .catch((assignError) => {
-                if (assignError.response?.status === 500) {
-                  console.warn(
-                    "Task assignment API returned 500 error - this is expected behavior"
-                  );
-                  console.log(
-                    "Continuing despite 500 error in task assignment"
-                  );
-                } else {
-                  console.error(
-                    "Unexpected error in task assignment:",
-                    assignError
-                  );
-                }
-              });
-          } catch (assignError) {
-            console.error("Error assigning task during creation:", assignError);
-            console.log("Continuing despite task assignment error");
-          }
-        }
-
-        setNewSubtask({
-          title: "",
-          description: "",
-          status: "To Do",
-          priority: "Medium",
-          estimated_hours: 0,
-          start_time: "",
-          file_url: [],
-          assigned_to: 0,
-          time_spent: "",
-        });
-        setSelectedFiles(null);
-        setShowAddSubtaskForm(false);
-
-        setTimeout(fetchSubtasks, 500);
-      } else {
-        toast.error("Failed to create subtask. Please try again.");
+      const response = await createSubtask(taskService, { formData });
+      if (response && response.id && newSubtask.assigned_to > 0) {
+        try {
+          await assignSubtask(taskService, response.id, newSubtask.assigned_to, userTask?.id);
+        } catch (assignError) {
+         }
       }
-    } catch (error: any) {
-      console.error("Error details:", error.response?.data || error.message);
-
-      if (error.response?.status === 201 || error.response?.status === 200) {
-        toast.success("Subtask created successfully");
-      } else if (error.response?.status === 500) {
-        console.log(
-          "Got 500 error, but checking if subtask was still created..."
-        );
-        toast.success("Subtask appears to have been created");
-      } else {
-        const errorMessage =
-          error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message ||
-          "Failed to create subtask";
-        toast.error(`Error: ${errorMessage}`);
-        setIsCreatingSubtask(false);
-        return;
-      }
-
+      toast.success("Subtask created successfully");
       setNewSubtask({
         title: "",
         description: "",
@@ -637,8 +400,17 @@ export default function Page() {
       });
       setSelectedFiles(null);
       setShowAddSubtaskForm(false);
-
-      setTimeout(fetchSubtasks, 500);
+      setTimeout(mutateSubtasks, 500);
+    } catch (error: any) {
+      console.error("Error details:", error.response?.data || error.message);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to create subtask";
+      toast.error(`Error: ${errorMessage}`);
+      setIsCreatingSubtask(false);
+      return;
     } finally {
       setIsCreatingSubtask(false);
     }
@@ -663,147 +435,43 @@ export default function Page() {
       toast.error("Title is required");
       return;
     }
-
     if (!id) {
       toast.error("Task ID is missing");
       return;
     }
-
     try {
       setIsCreatingSubtask(true);
-
       const formData = new FormData();
       formData.append("task_id", id.toString());
       formData.append("title", inlineNewSubtask.title);
       formData.append("description", inlineNewSubtask.description || "");
       formData.append("status", inlineNewSubtask.status);
       formData.append("priority", inlineNewSubtask.priority);
-
       if (inlineNewSubtask.start_time) {
-        const formattedStartTime = new Date(
-          inlineNewSubtask.start_time
-        ).toISOString();
+        const formattedStartTime = new Date(inlineNewSubtask.start_time).toISOString();
         formData.append("start_time", formattedStartTime);
         formData.append("deadline", formattedStartTime);
       }
-
-      formData.append(
-        "estimated_hours",
-        inlineNewSubtask.estimated_hours.toString()
-      );
-
+      formData.append("estimated_hours", inlineNewSubtask.estimated_hours.toString());
       if (inlineNewSubtask.assigned_to > 0) {
         formData.append("assigned_to", inlineNewSubtask.assigned_to.toString());
       }
-
       if (inlineSelectedFiles && inlineSelectedFiles.length > 0) {
         Array.from(inlineSelectedFiles).forEach((file) => {
           formData.append("file_url", file);
         });
       }
-
       if (inlineNewSubtask.time_spent) {
         formData.append("time_spent", inlineNewSubtask.time_spent);
       }
-
-      const response = await axios.post(
-        `${taskService}/api/subtasks/create`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.data || (response.status >= 200 && response.status < 300)) {
-        toast.success("Subtask created successfully");
-
-        if (
-          response.data &&
-          response.data.id &&
-          inlineNewSubtask.assigned_to > 0
-        ) {
-          try {
-            const assignedUser = users.find(
-              (u) => u.id === inlineNewSubtask.assigned_to
-            );
-            console.log(
-              "Attempting to assign task to user:",
-              assignedUser?.name || "Unknown"
-            );
-
-            await axios
-              .post(`${taskService}/api/task-assignment/assignTask`, {
-                task_id: response.data.id,
-                user_id: inlineNewSubtask.assigned_to,
-                assignedby_id: userTask?.id
-              })
-              .then(() => {
-                console.log("Task assignment API call successful");
-              })
-              .catch((assignError) => {
-                if (assignError.response?.status === 500) {
-                  console.warn(
-                    "Task assignment API returned 500 error - this is expected behavior"
-                  );
-                  console.log(
-                    "Continuing despite 500 error in task assignment"
-                  );
-                } else {
-                  console.error(
-                    "Unexpected error in task assignment:",
-                    assignError
-                  );
-                }
-              });
-          } catch (assignError) {
-            console.error("Error assigning task during creation:", assignError);
-            console.log("Continuing despite task assignment error");
-          }
-        }
-
-        setInlineNewSubtask({
-          title: "",
-          assigned_to: 0,
-          status: "To Do",
-          priority: "Medium",
-          estimated_hours: 0,
-          start_time: "",
-          description: "",
-          time_spent: "",
-        });
-        setInlineSelectedFiles(null);
-        setShowInlineForm(false);
-
-        setTimeout(fetchSubtasks, 500);
-      } else {
-        toast.error("Failed to create subtask. Please try again.");
+      const response = await createSubtask(taskService, { formData });
+      if (response && response.id && inlineNewSubtask.assigned_to > 0) {
+        try {
+          await assignSubtask(taskService, response.id, inlineNewSubtask.assigned_to, userTask?.id);
+        } catch (assignError) {
+         }
       }
-    } catch (error: any) {
-      console.error("Error creating subtask:", error.message);
-
-      if (error.response?.status === 201 || error.response?.status === 200) {
-        toast.success("Subtask created successfully");
-      } else if (error.response?.status === 500) {
-        console.log(
-          "Got 500 error, but checking if subtask was still created..."
-        );
-        toast.success("Subtask appears to have been created");
-      } else {
-        let errorMessage = "Failed to create subtask";
-        if (error.response?.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response?.data?.error) {
-          errorMessage = error.response.data.error;
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        toast.error(`Error: ${errorMessage}`);
-        setIsCreatingSubtask(false);
-        return;
-      }
-
+      toast.success("Subtask created successfully");
       setInlineNewSubtask({
         title: "",
         assigned_to: 0,
@@ -816,8 +484,16 @@ export default function Page() {
       });
       setInlineSelectedFiles(null);
       setShowInlineForm(false);
-
-      setTimeout(fetchSubtasks, 500);
+      setTimeout(mutateSubtasks, 500);
+    } catch (error: any) {
+       const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to create subtask";
+      toast.error(`Error: ${errorMessage}`);
+      setIsCreatingSubtask(false);
+      return;
     } finally {
       setIsCreatingSubtask(false);
     }
@@ -1253,24 +929,6 @@ export default function Page() {
                               <option value="High">High</option>
                               <option value="Critical">Critical</option>
                             </select>
-
-                            <label
-                              htmlFor="inline-file-upload"
-                              className="mr-2 p-2 text-sm border border-gray-300 rounded-lg text-gray-500 hover:bg-gray-50 cursor-pointer"
-                              title="Attach files"
-                            >
-                              <FiPaperclip size={16} />
-                            </label>
-                            <input
-                              type="file"
-                              multiple
-                              id="inline-file-upload"
-                              onChange={(e) =>
-                                setInlineSelectedFiles(e.target.files)
-                              }
-                              className="hidden"
-                            />
-
                             <input
                               type="text"
                               placeholder="Description"
@@ -1745,7 +1403,7 @@ export default function Page() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Actual Time
+                      Actual Time
                     </label>
                     <input
                       type="number"
@@ -1927,7 +1585,7 @@ export default function Page() {
                   ))}
                 </>
               ) : (
-                 <>
+                <>
                   <div className="mb-3 flex items-center">
                     <button
                       onClick={() => setSelectedRoleCategory(null)}
@@ -2138,7 +1796,7 @@ export default function Page() {
         </div>
       )}
 
-       {showAddSubtaskForm && (
+      {showAddSubtaskForm && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div className="bg-white p-6 rounded-lg shadow-xl border border-gray-200 mb-6 pointer-events-auto">
             <div className="flex items-center justify-between mb-4">

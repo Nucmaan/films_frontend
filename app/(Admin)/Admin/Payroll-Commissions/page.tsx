@@ -62,8 +62,7 @@ export default function PayrollCommissionsPage() {
   const [timeFilter, setTimeFilter] = useState("current-month");
   
   useEffect(() => {
-    // Load mock data immediately without delay
-    const loadMockData = () => {
+     const loadMockData = () => {
       const mockData: PaymentRecord[] = [
         {
           id: 1,
@@ -163,21 +162,17 @@ export default function PayrollCommissionsPage() {
   }, []);
   
   const filteredRecords = paymentRecords.filter(record => {
-    // Search filter
-    const matchesSearch = searchQuery === "" || 
+     const matchesSearch = searchQuery === "" || 
       record.employee_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.role.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Payment type filter
-    const matchesPaymentType = paymentTypeFilter === "all" || 
+     const matchesPaymentType = paymentTypeFilter === "all" || 
       record.payment_type.toLowerCase() === paymentTypeFilter.toLowerCase();
     
-    // Status filter
-    const matchesStatus = statusFilter === "all" || 
+     const matchesStatus = statusFilter === "all" || 
       record.status.toLowerCase() === statusFilter.toLowerCase();
     
-    // Time filter (simplified for demo)
-    let matchesTime = true;
+     let matchesTime = true;
     const paymentDate = new Date(record.payment_date);
     const currentDate = new Date();
     
@@ -190,8 +185,7 @@ export default function PayrollCommissionsPage() {
       matchesTime = paymentDate.getMonth() === prevMonth && 
                    paymentDate.getFullYear() === prevMonthYear;
     } else if (timeFilter === "last-quarter") {
-      // Simplistic implementation for demo
-      const threeMonthsAgo = new Date(currentDate);
+       const threeMonthsAgo = new Date(currentDate);
       threeMonthsAgo.setMonth(currentDate.getMonth() - 3);
       matchesTime = paymentDate >= threeMonthsAgo;
     }
@@ -199,8 +193,7 @@ export default function PayrollCommissionsPage() {
     return matchesSearch && matchesPaymentType && matchesStatus && matchesTime;
   });
   
-  // Calculate summary statistics
-  const totalSalaries = filteredRecords
+   const totalSalaries = filteredRecords
     .filter(record => record.payment_type === "Salary" && record.status !== "Declined")
     .reduce((sum, record) => sum + record.amount, 0);
     
@@ -216,16 +209,14 @@ export default function PayrollCommissionsPage() {
     .filter(record => record.status === "Pending")
     .reduce((sum, record) => sum + record.amount, 0);
 
-  // Helper function to format currency
-  const formatCurrency = (amount: number) => {
+   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
   };
   
-  // Helper function to get status badge style
-  const getStatusBadgeStyle = (status: string) => {
+   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
       case "Processed":
         return "bg-green-50 text-green-700 border-green-200";
@@ -238,8 +229,7 @@ export default function PayrollCommissionsPage() {
     }
   };
   
-  // Helper function to get payment type badge style
-  const getPaymentTypeBadgeStyle = (type: string) => {
+   const getPaymentTypeBadgeStyle = (type: string) => {
     switch (type) {
       case "Salary":
         return "bg-blue-50 text-blue-700 border-blue-200";
@@ -265,8 +255,7 @@ export default function PayrollCommissionsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Header Section */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
+       <div className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -289,8 +278,7 @@ export default function PayrollCommissionsPage() {
 
       <div className="container mx-auto px-6 py-8">
         <div className="flex flex-col gap-8">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all">
               <CardContent className="p-0">
                 <div className="flex items-stretch h-full">
@@ -372,8 +360,7 @@ export default function PayrollCommissionsPage() {
             </Card>
           </div>
 
-          {/* Filters */}
-          <Card className="border border-gray-100 shadow-sm">
+           <Card className="border border-gray-100 shadow-sm">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="relative w-full md:w-72">
@@ -431,8 +418,7 @@ export default function PayrollCommissionsPage() {
             </CardContent>
           </Card>
 
-          {/* Payment Records Table */}
-          <Card className="border border-gray-100 bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow transition-all">
+           <Card className="border border-gray-100 bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow transition-all">
             <CardHeader className="border-b border-gray-100 py-5 px-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-orange-50 rounded-xl">

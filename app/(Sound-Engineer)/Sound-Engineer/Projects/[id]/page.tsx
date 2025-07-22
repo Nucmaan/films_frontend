@@ -34,7 +34,7 @@ import { useProject, useProjectTasks, useProjectUsers } from '@/lib/itsMe/page.j
       return "bg-gray-100 text-gray-800";
   }
 };
-
+ 
 const getPriorityColor = (priority: string) => {
   switch (priority) {
     case "Low":
@@ -144,7 +144,7 @@ export default function ProjectDetail({ params }: { params: any }) {
   const router = useRouter();
   const id = params.id;
 
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1); 
 
   const projectService = process.env.NEXT_PUBLIC_PROJECT_SERVICE_URL;
   const taskService = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
@@ -167,8 +167,7 @@ export default function ProjectDetail({ params }: { params: any }) {
   } = useProjectTasks(id, taskService, page);
   const { users, error: usersError, isLoading: usersLoading, mutate: mutateUsers } = useProjectUsers(userService);
 
-  // Remove useEffect and useState for fetching project, tasks, users
-  // Keep useState for UI state (form, modal, etc.)
+   
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
@@ -181,8 +180,7 @@ export default function ProjectDetail({ params }: { params: any }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const user = userAuth((state) => state.user);
 
-  // New task state
-  const [newTask, setNewTask] = useState<{
+   const [newTask, setNewTask] = useState<{
     title: string;
     description: string;
     status: "To Do" | "In Progress" | "Review" | "Completed";
@@ -198,8 +196,7 @@ export default function ProjectDetail({ params }: { params: any }) {
     estimated_hours: 0,
   });
 
-  // Edit task state
-  const [editTask, setEditTask] = useState<{
+   const [editTask, setEditTask] = useState<{
     title: string;
     description: string;
     status: "To Do" | "In Progress" | "Review" | "Completed";
@@ -215,8 +212,7 @@ export default function ProjectDetail({ params }: { params: any }) {
     estimated_hours: 0,
   });
 
-  // Remove useEffect for clearing new task form, use useEffect only for UI state
-  useEffect(() => {
+   useEffect(() => {
     if (!showNewTaskForm) {
       setTaskFile(null);
       setNewTask({
@@ -230,19 +226,16 @@ export default function ProjectDetail({ params }: { params: any }) {
     }
   }, [showNewTaskForm]);
 
-  // Remove all fetchProject, fetchTasks, fetchUsers, and related useEffects
-  // Use SWR's loading/error states for UI
+  
   const loading = projectLoading || tasksLoading || usersLoading;
   const error = projectError || tasksError || usersError;
 
-  // For create/update/delete, use mutateTasks() to revalidate tasks after action
-  // For project delete, use mutateProject() if needed
+ 
 
   if (loading) {
     return (
       <div className="w-full mx-auto py-5 px-4 sm:px-4 lg:px-4 min-h-screen bg-gray-50">
-        {/* Skeleton for header/back button */}
-        <div className="mb-6 animate-pulse">
+         <div className="mb-6 animate-pulse">
           <div className="h-10 w-40 bg-gray-200 rounded mb-4" />
         </div>
         {/* Skeleton for project info */}
@@ -252,14 +245,11 @@ export default function ProjectDetail({ params }: { params: any }) {
           <div className="h-4 w-80 bg-gray-100 rounded mb-2" />
           <div className="h-4 w-56 bg-gray-100 rounded mb-2" />
         </div>
-        {/* Skeleton for task columns */}
-        <div className="grid grid-cols-4 gap-6 mt-6">
+         <div className="grid grid-cols-4 gap-6 mt-6">
           {[...Array(4)].map((_, idx) => (
             <div key={idx} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm animate-pulse">
-              {/* Column title */}
-              <div className="h-6 w-32 bg-gray-200 rounded mb-4" />
-              {/* Skeleton cards for tasks */}
-              {[...Array(2)].map((_, tIdx) => (
+               <div className="h-6 w-32 bg-gray-200 rounded mb-4" />
+               {[...Array(2)].map((_, tIdx) => (
                 <div key={tIdx} className="mb-6">
                   <div className="h-44 w-full bg-gray-100 rounded mb-3" />
                   <div className="h-4 w-24 bg-gray-200 rounded mb-2" />
@@ -563,7 +553,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                               setTaskFile(null);
                               setShowNewTaskForm(false);
 
-                              mutateTasks(); // Re-fetch tasks
+                              mutateTasks();  
                             } else {
                               toast.error(
                                 response.data.message ||
@@ -716,11 +706,11 @@ export default function ProjectDetail({ params }: { params: any }) {
                                   onClick={() => {
                                     if (confirm("Are you sure you want to delete this task?")) {
                                       setDeletingTaskId(task.id);
-                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`)
+                                      axios.delete(`${process.env.NEXT_PUBLIC_TASK_SERVICE_URL}/api/task/deleteSingleTask/${task.id}?page=${currentPage}`)
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
-                                            mutateTasks(); // Re-fetch tasks
+                                            mutateTasks();  
                                           }
                                         })
                                         .catch(error => {
@@ -843,11 +833,11 @@ export default function ProjectDetail({ params }: { params: any }) {
                                   onClick={() => {
                                     if (confirm("Are you sure you want to delete this task?")) {
                                       setDeletingTaskId(task.id);
-                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`)
+                                      axios.delete(`${process.env.NEXT_PUBLIC_TASK_SERVICE_URL}/api/task/deleteSingleTask/${task.id}?page=${currentPage}`)
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
-                                            mutateTasks(); // Re-fetch tasks
+                                            mutateTasks(); 
                                           }
                                         })
                                         .catch(error => {
@@ -970,11 +960,11 @@ export default function ProjectDetail({ params }: { params: any }) {
                                   onClick={() => {
                                     if (confirm("Are you sure you want to delete this task?")) {
                                       setDeletingTaskId(task.id);
-                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`)
+                                      axios.delete(`${process.env.NEXT_PUBLIC_TASK_SERVICE_URL}/api/task/deleteSingleTask/${task.id}?page=${currentPage}`)
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
-                                            mutateTasks(); // Re-fetch tasks
+                                            mutateTasks();  
                                           }
                                         })
                                         .catch(error => {
@@ -1097,11 +1087,11 @@ export default function ProjectDetail({ params }: { params: any }) {
                                   onClick={() => {
                                     if (confirm("Are you sure you want to delete this task?")) {
                                       setDeletingTaskId(task.id);
-                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`)
+                                      axios.delete(`${process.env.NEXT_PUBLIC_TASK_SERVICE_URL}/api/task/deleteSingleTask/${task.id}?page=${currentPage}`)
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
-                                            mutateTasks(); // Re-fetch tasks
+                                            mutateTasks();  
                                           }
                                         })
                                         .catch(error => {
@@ -1134,8 +1124,7 @@ export default function ProjectDetail({ params }: { params: any }) {
         </div>
       </div>
 
-      {/* Pagination Controls for Tasks */}
-      <div className="flex justify-center items-center gap-4 mt-8">
+       <div className="flex justify-center items-center gap-4 mt-8">
         <button
           className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
           onClick={() => setPage((p: number) => Math.max(1, p - 1))}
@@ -1205,7 +1194,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                     if (response.data.success) {
                       toast.success("Project deleted successfully");
                       router.push("/Sound-Engineer/Projects");
-                      mutateProject(); // Re-fetch project
+                      mutateProject();  
                     } else {
                       toast.error(response.data.message || "Failed to delete project");
                     }
@@ -1466,13 +1455,11 @@ export default function ProjectDetail({ params }: { params: any }) {
                     
                     formData.append("estimated_hours", editTask.estimated_hours.toString());
                     
-                    // Append file if any
-                    if (editTaskFile) {
+                     if (editTaskFile) {
                       formData.append("file_url", editTaskFile);
                     }
 
-                    // Send request to update task
-                    const response = await axios.put(
+                     const response = await axios.put(
                       `${taskService}/api/task/updateTask/${editingTaskId}`,
                       formData,
                       {
@@ -1485,7 +1472,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                     if (response.data && response.data.success) {
                       toast.success("Task updated successfully");
 
-                       mutateTasks(); // Re-fetch tasks
+                       mutateTasks();  
 
                        setEditingTaskId(null);
                       setEditTaskFile(null);
@@ -1519,9 +1506,7 @@ export default function ProjectDetail({ params }: { params: any }) {
                         return t;
                       });
 
-                      // Update the tasks state directly if mutateTasks doesn't update it
-                      // This might be necessary if mutateTasks doesn't re-render the component
-                      // For now, rely on mutateTasks to re-fetch and update the list
+                  
                     }
                   } catch (error: any) {
                     toast.error(
