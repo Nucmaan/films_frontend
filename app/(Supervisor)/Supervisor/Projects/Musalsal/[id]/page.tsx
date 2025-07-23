@@ -59,7 +59,7 @@ export default function EditProjectPage() {
         console.error('Failed to load project. Response:', response);
         toast.error("Failed to load project");
         setTimeout(() => {
-          router.push('/Supervisor/Projects/Musalsal');
+          router.push('/Admin/Projects/Musalsal');
         }, 1500);
       }
     } catch (error: any) {
@@ -67,7 +67,7 @@ export default function EditProjectPage() {
       const message = error.response?.data?.message || "Error loading project";
       toast.error(message);
       setTimeout(() => {
-        router.push('/Supervisor/Projects/Musalsal');
+        router.push('/Admin/Projects/Musalsal');
       }, 1500);
     } finally {
       setLoading(false);
@@ -183,7 +183,7 @@ export default function EditProjectPage() {
       
       if (response.data.success) {
         toast.success("Project updated successfully");
-        router.push('/Supervisor/Projects/Musalsal');
+        router.push('/Admin/Projects/Musalsal');
       } else {
         toast.error(response.data.message || "Failed to update project");
       }
@@ -209,7 +209,7 @@ export default function EditProjectPage() {
       <div className="flex flex-col items-center justify-center min-h-screen">
         <h1 className="text-2xl font-bold mb-4">Project not found</h1>
         <button
-          onClick={() => router.push('/Supervisor/Projects/Musalsal')}
+          onClick={() => router.push('/Admin/Projects/Musalsal')}
           className="px-4 py-2 bg-[#ff4e00] text-white rounded-md hover:bg-[#ff4e00]/90 transition-colors"
         >
           Back to Projects
@@ -227,7 +227,7 @@ export default function EditProjectPage() {
     >
       <div className="mb-6">
         <button
-          onClick={() => router.push('/Supervisor/Projects/Musalsal')}
+          onClick={() => router.push('/Admin/Projects/Musalsal')}
           className="mb-6 flex items-center gap-2 text-gray-600 hover:text-[#ff4e00] transition-colors"
         >
           <FiArrowLeft />
@@ -380,7 +380,7 @@ export default function EditProjectPage() {
           <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-gray-200">
             <button
               type="button"
-              onClick={() => router.push('/Supervisor/Projects/Musalsal')}
+              onClick={() => router.push('/Admin/Projects/Musalsal')}
               disabled={isSubmitting}
               className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
             >

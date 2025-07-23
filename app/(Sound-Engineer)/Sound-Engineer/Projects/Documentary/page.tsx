@@ -3,9 +3,8 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import ProjectKanbanSkeleton from "@/components/ProjectKanbanSkeleton";
-
 import LoadingReuse from "@/components/LoadingReuse";
+import ProjectKanbanSkeleton from "@/components/ProjectKanbanSkeleton";
 import { FiEdit, FiEye, FiTrash2, FiCalendar, FiClock, FiFlag, FiX, FiPlus, FiSearch, FiUpload, FiImage, FiFilter, FiInfo, FiLayers } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import userAuth from "@/myStore/userAuth";
@@ -341,12 +340,12 @@ export default function ProjectsPage() {
 
   // Update the handleViewProject function to navigate to the project detail page
   const handleViewProject = (projectId: number) => {
-    router.push(`/Sound-Engineer/Projects/${projectId}`);
+    router.push(`/Admin/Projects/${projectId}`);
   };
 
   // Add a new function to handle edit navigation
   const handleEditProject = (projectId: number) => {
-    router.push(`/Sound-Engineer/Projects/Documentary/${projectId}`);
+    router.push(`/Admin/Projects/Documentary/${projectId}`);
   };
 
   // Handle deleting a project

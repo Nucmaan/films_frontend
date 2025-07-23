@@ -387,11 +387,11 @@ export default function ProjectsPage() {
   };
 
    const handleViewProject = (projectId: number) => {
-    router.push(`/Supervisor/Projects/${projectId}`);
+    router.push(`/Admin/Projects/${projectId}`);
   };
 
    const handleEditProject = (projectId: number) => {
-    router.push(`/Supervisor/Projects/Musalsal/${projectId}`);
+    router.push(`/Admin/Projects/Musalsal/${projectId}`);
   };
 
    const handleDeleteProject = async (projectId: number) => {

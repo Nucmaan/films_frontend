@@ -3,9 +3,8 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import ProjectKanbanSkeleton from "@/components/ProjectKanbanSkeleton";
-
 import LoadingReuse from "@/components/LoadingReuse";
+import ProjectKanbanSkeleton from "@/components/ProjectKanbanSkeleton";
 import { FiEdit, FiEye, FiTrash2, FiCalendar, FiClock, FiFlag, FiX, FiPlus, FiSearch, FiUpload, FiImage, FiFilter, FiInfo, FiLayers } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import userAuth from "@/myStore/userAuth";
@@ -213,7 +212,8 @@ const KanbanCard = ({
           <span className="text-sm text-gray-600">{project.priority} Priority</span>
         </div>
         
-         
+        {/* Task count for this project */}
+       
         
         {/* Actions */}
         <div className="flex gap-2">

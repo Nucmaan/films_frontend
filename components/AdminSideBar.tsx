@@ -8,7 +8,6 @@ import {
   FaTimes
 } from "react-icons/fa";
 
-
 import {
   Home,
   Users,
@@ -87,7 +86,7 @@ export default function AdminSideBar({ open = true }: AdminSideBarProps) {
   ];
 
   const systemMenuItems = [
-    { path: "/Admin/Reports-Analytics", icon: BarChart, label: "Reports & Analytics" },
+    //{ path: "/Admin/Reports-Analytics", icon: BarChart, label: "Reports & Analytics" },
     { path: "/Admin/Notifications", icon: Bell, label: "Notifications" },
     { path: "/Admin/Sound-End", icon: AudioWaveform , label: "Sound-Eng" },
     { path: "/Admin/Settings", icon: Settings, label: "Settings" },

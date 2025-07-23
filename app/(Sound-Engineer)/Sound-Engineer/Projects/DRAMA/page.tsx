@@ -213,12 +213,6 @@ const KanbanCard = ({
           <span className="text-sm text-gray-600">{project.priority} Priority</span>
         </div>
         
-<<<<<<< HEAD
-<<<<<<< HEAD
-         
-=======
-=======
->>>>>>> parent of 1e2a220 (v0.01)
         {/* Task count for this project */}
         <div className="flex items-center gap-2 mb-4">
           <div className="flex items-center text-sm text-gray-600">
@@ -228,7 +222,6 @@ const KanbanCard = ({
             <span>{project.tasks_count || 0} tasks</span>
           </div>
         </div>
->>>>>>> parent of 1e2a220 (v0.01)
         
         {/* Actions */}
         <div className="flex gap-2">
