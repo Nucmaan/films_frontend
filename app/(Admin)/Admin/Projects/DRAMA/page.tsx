@@ -213,8 +213,11 @@ const KanbanCard = ({
         </div>
         
 <<<<<<< HEAD
+<<<<<<< HEAD
          
 =======
+=======
+>>>>>>> parent of 1e2a220 (v0.01)
         {/* Task count for this project */}
         <div className="flex items-center gap-2 mb-4">
           <div className="flex items-center text-sm text-gray-600">

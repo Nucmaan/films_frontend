@@ -528,6 +528,7 @@ export default function Page() {
         formData.append("time_spent", newSubtask.time_spent);
       }
 <<<<<<< HEAD
+<<<<<<< HEAD
       formData.append("assignee_name", userTask?.name || "Not Specified");
       const response = await createSubtask(taskService, { formData });
       if (response && response.id && newSubtask.assigned_to > 0) {
@@ -536,6 +537,8 @@ export default function Page() {
         } catch (assignError) {
          }
 =======
+=======
+>>>>>>> parent of 1e2a220 (v0.01)
 
       const response = await axios.post(
         `${taskService}/api/subtasks/create`,
@@ -613,6 +616,9 @@ export default function Page() {
         setTimeout(fetchSubtasks, 500);
       } else {
         toast.error("Failed to create subtask. Please try again.");
+<<<<<<< HEAD
+>>>>>>> parent of 1e2a220 (v0.01)
+=======
 >>>>>>> parent of 1e2a220 (v0.01)
       }
     } catch (error: any) {
@@ -650,6 +656,7 @@ export default function Page() {
       setSelectedFiles(null);
       setShowAddSubtaskForm(false);
 <<<<<<< HEAD
+<<<<<<< HEAD
       setTimeout(mutateSubtasks, 500);
     } catch (error: any) {
       const errorMessage =
@@ -660,6 +667,10 @@ export default function Page() {
       toast.error(`Error: ${errorMessage}`);
       setIsCreatingSubtask(false);
       return;
+=======
+
+      setTimeout(fetchSubtasks, 500);
+>>>>>>> parent of 1e2a220 (v0.01)
 =======
 
       setTimeout(fetchSubtasks, 500);
@@ -731,6 +742,7 @@ export default function Page() {
         formData.append("time_spent", inlineNewSubtask.time_spent);
       }
 <<<<<<< HEAD
+<<<<<<< HEAD
       formData.append("assignee_name", userTask?.name || "Not Specified");
       const response = await createSubtask(taskService, { formData });
       if (response && response.id && inlineNewSubtask.assigned_to > 0) {
@@ -739,6 +751,8 @@ export default function Page() {
         } catch (assignError) {
          }
 =======
+=======
+>>>>>>> parent of 1e2a220 (v0.01)
 
       const response = await axios.post(
         `${taskService}/api/subtasks/create`,
@@ -813,6 +827,9 @@ export default function Page() {
         setTimeout(fetchSubtasks, 500);
       } else {
         toast.error("Failed to create subtask. Please try again.");
+<<<<<<< HEAD
+>>>>>>> parent of 1e2a220 (v0.01)
+=======
 >>>>>>> parent of 1e2a220 (v0.01)
       }
     } catch (error: any) {

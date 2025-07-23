@@ -95,10 +95,13 @@ export default function ReportsAnalyticsPage() {
   );
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   // Filtered users will now also correctly infer its type as User[]
   const filteredUsers = users.filter((user: User) => // Explicitly type user here for clarity, though it might be inferred
     searchQuery === "" || user.name.toLowerCase().includes(searchQuery.toLowerCase())
 =======
+=======
+>>>>>>> parent of 1e2a220 (v0.01)
   // Filter completedTasks by selected month
   const filterTasksByMonth = (tasks: CompletedTask[]) => {
     if (selectedMonth === "current") {
