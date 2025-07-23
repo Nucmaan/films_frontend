@@ -1,6 +1,6 @@
 "use client";
 
-import {  useState } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -9,7 +9,7 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
- import { format  } from "date-fns";
+import { format } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -27,31 +27,40 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Search, 
+import {
+  Search,
   Users,
-  BarChart2, 
-  ExternalLink, 
-  PieChart, 
-  TrendingUp, 
-  ClipboardCheck, 
-  Download, 
-  Calendar, 
-
+  BarChart2,
+  ExternalLink,
+  PieChart,
+  TrendingUp,
+  ClipboardCheck,
+  Download,
+  Calendar,
   DollarSign
 } from 'lucide-react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useUsersWithCompletedTasks } from "@/lib/analytics/page.js";
+import { useUsersWithCompletedTasks } from "@/lib/analytics/page.js"; // Assuming this hook returns the user data
 import ReportsAnalyticsSkeleton from "@/components/ReportsAnalyticsSkeleton";
 
- 
-
+// Define the User interface based on the properties used in your component
+interface User {
+  id: string;
+  name: string;
+  role: string;
+  work_experience_level: string;
+  totalHours: number;
+  hourlyRate: number;
+  monthlyCommission: number;
+  // Add any other properties that might be part of the user object
+}
 
 export default function ReportsAnalyticsPage() {
   const taskServiceUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+
   // Initialize selectedMonth to current month in YYYY-MM format
   const getCurrentMonth = () => {
     const now = new Date();
@@ -60,8 +69,9 @@ export default function ReportsAnalyticsPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth());
 
   // Add this destructuring to get all needed values from the hook
+  // Explicitly type the 'users' array as 'User[]'
   const {
-    users,
+    users, // This will now be inferred as User[] if the hook's return type is properly set
     isLoading,
     error,
     apiMessage,
@@ -69,19 +79,30 @@ export default function ReportsAnalyticsPage() {
     totalHours,
     averageRate,
     totalCommission
+  }: {
+    users: User[]; // Explicitly type users as an array of User
+    isLoading: boolean;
+    error: any; // You might want to define a more specific error type
+    apiMessage: string;
+    totalStaff: number;
+    totalHours: number;
+    averageRate: number;
+    totalCommission: number;
   } = useUsersWithCompletedTasks(
     taskServiceUrl,
     selectedMonth,
     selectedStatus
   );
 
-  const filteredUsers = users.filter((user: any) =>
+  // Filtered users will now also correctly infer its type as User[]
+  const filteredUsers = users.filter((user: User) => // Explicitly type user here for clarity, though it might be inferred
     searchQuery === "" || user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleDownload = () => {
     const headers = ["NO", "Name", "Job Position", "Experience Level", "Total Hours", "Rate ($/hour)", "Monthly Commission ($)"];
-    const csvData = filteredUsers.map((user, index) => [
+    // The 'user' parameter here will now correctly be typed as 'User'
+    const csvData = filteredUsers.map((user: User, index: number) => [
       index + 1,
       user.name,
       user.role,
@@ -176,7 +197,7 @@ export default function ReportsAnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all">
               <CardContent className="p-0">
                 <div className="flex items-stretch h-full">
@@ -198,7 +219,7 @@ export default function ReportsAnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all">
               <CardContent className="p-0">
                 <div className="flex items-stretch h-full">
@@ -220,7 +241,7 @@ export default function ReportsAnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all">
               <CardContent className="p-0">
                 <div className="flex items-stretch h-full">
@@ -263,8 +284,8 @@ export default function ReportsAnalyticsPage() {
                     <SelectValue placeholder="Filter by role" />
                   </SelectTrigger>
                   <SelectContent className="bg-white rounded-xl shadow-md p-2 border border-gray-100">
-                    <SelectItem 
-                      value="all" 
+                    <SelectItem
+                      value="all"
                       className="cursor-pointer py-3 px-6 rounded-lg hover:bg-blue-50 transition-colors"
                     >
                       {selectedStatus === "all" ? (
@@ -274,36 +295,36 @@ export default function ReportsAnalyticsPage() {
                       )}
                       All Staff
                     </SelectItem>
-                    <SelectItem 
-                      value="Translator" 
+                    <SelectItem
+                      value="Translator"
                       className="cursor-pointer py-3 px-6 rounded-lg hover:bg-blue-50 transition-colors"
                     >
                       {selectedStatus === "Translator" && <span className="text-blue-500 mr-2">✓</span>}
                       Translators
                     </SelectItem>
-                    <SelectItem 
-                      value="Voice-over Artist" 
+                    <SelectItem
+                      value="Voice-over Artist"
                       className="cursor-pointer py-3 px-6 rounded-lg hover:bg-blue-50 transition-colors"
                     >
                       {selectedStatus === "Voice-over Artist" && <span className="text-blue-500 mr-2">✓</span>}
                       Voice-over Artists
                     </SelectItem>
-                    <SelectItem 
-                      value="Sound Engineer" 
+                    <SelectItem
+                      value="Sound Engineer"
                       className="cursor-pointer py-3 px-6 rounded-lg hover:bg-blue-50 transition-colors"
                     >
                       {selectedStatus === "Sound Engineer" && <span className="text-blue-500 mr-2">✓</span>}
                       Sound Engineers
                     </SelectItem>
-                    <SelectItem 
-                      value="Admin" 
+                    <SelectItem
+                      value="Admin"
                       className="cursor-pointer py-3 px-6 rounded-lg hover:bg-blue-50 transition-colors"
                     >
                       {selectedStatus === "Admin" && <span className="text-blue-500 mr-2">✓</span>}
                       Admins
                     </SelectItem>
-                    <SelectItem 
-                      value="Film Dubbing Team" 
+                    <SelectItem
+                      value="Film Dubbing Team"
                       className="cursor-pointer py-3 px-6 rounded-lg hover:bg-blue-50 transition-colors"
                     >
                       {selectedStatus === "Film Dubbing Team" && <span className="text-blue-500 mr-2">✓</span>}
@@ -329,7 +350,7 @@ export default function ReportsAnalyticsPage() {
                   />
                 </div>
                 <div className="mt-2">
-                  <button 
+                  <button
                     onClick={handleDownload}
                     className="w-full text-center text-blue-600 py-3 px-6 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer flex items-center justify-center"
                   >
@@ -351,15 +372,15 @@ export default function ReportsAnalyticsPage() {
                   <div>
                     <CardTitle className="text-lg font-semibold">Team Compensation Summary</CardTitle>
                     <CardDescription className="text-sm text-gray-500">
-                      {selectedMonth === getCurrentMonth() 
-                        ? "Current month - Staff with completed tasks" 
+                      {selectedMonth === getCurrentMonth()
+                        ? "Current month - Staff with completed tasks"
                         : `${selectedMonth} - Staff with completed tasks`}
                     </CardDescription>
                   </div>
                 </div>
-                <Button 
+                <Button
                   onClick={handleDownload}
-                  variant="outline" 
+                  variant="outline"
                   className="px-4 py-2 border-blue-200 text-blue-600 hover:bg-blue-50 rounded-lg"
                 >
                   <Download className="h-4 w-4 mr-2" />
@@ -402,7 +423,7 @@ export default function ReportsAnalyticsPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredUsers.map((user: any, index: number) => (
+                      filteredUsers.map((user: User, index: number) => (
                         <TableRow key={user.id} className="hover:bg-blue-50/5 transition-colors duration-150 group border-b border-gray-100">
                           <TableCell className="font-medium text-gray-600">{index + 1}</TableCell>
                           <TableCell>{user.name}</TableCell>
@@ -417,7 +438,7 @@ export default function ReportsAnalyticsPage() {
                           <TableCell>US$ {user.monthlyCommission.toFixed(2)}</TableCell>
                           <TableCell className="text-right">
                             <Link href={`/Admin/Reports-Analytics/${user.id}`}>
-                              <button 
+                              <button
                                 className="inline-flex items-center cursor-pointer gap-1.5 px-4 py-2 text-sm rounded-lg border border-blue-200 text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors shadow-sm hover:shadow"
                               >
                                 <ExternalLink className="h-3.5 w-3.5" />
@@ -428,7 +449,7 @@ export default function ReportsAnalyticsPage() {
                         </TableRow>
                       ))
                     )}
-                    
+
                     {filteredUsers.length > 0 && (
                       <TableRow className="bg-gray-50/50 font-medium border-t-2 border-gray-200">
                         <TableCell colSpan={6} className="text-right pr-4 font-bold text-gray-700">
