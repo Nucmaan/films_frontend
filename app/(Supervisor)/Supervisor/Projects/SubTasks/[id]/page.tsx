@@ -47,6 +47,7 @@ interface Subtask {
   createdAt?: string;
   updatedAt?: string;
   time_spent?: string;
+  assignee_name?: string;
 }
 
 interface User {
@@ -140,6 +141,7 @@ const getFileType = (fileUrl: string) => {
 };
 
 export default function Page() {
+
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
@@ -379,6 +381,7 @@ export default function Page() {
       if (newSubtask.time_spent) {
         formData.append("time_spent", newSubtask.time_spent);
       }
+      formData.append("assignee_name", userTask?.name || "Not Specified");
       const response = await createSubtask(taskService, { formData });
       if (response && response.id && newSubtask.assigned_to > 0) {
         try {
@@ -402,7 +405,6 @@ export default function Page() {
       setShowAddSubtaskForm(false);
       setTimeout(mutateSubtasks, 500);
     } catch (error: any) {
-      console.error("Error details:", error.response?.data || error.message);
       const errorMessage =
         error.response?.data?.message ||
         error.response?.data?.error ||
@@ -464,6 +466,7 @@ export default function Page() {
       if (inlineNewSubtask.time_spent) {
         formData.append("time_spent", inlineNewSubtask.time_spent);
       }
+      formData.append("assignee_name", userTask?.name || "Not Specified");
       const response = await createSubtask(taskService, { formData });
       if (response && response.id && inlineNewSubtask.assigned_to > 0) {
         try {
@@ -577,6 +580,12 @@ export default function Page() {
                     >
                       Spent Time
                     </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
+                    >
+                      Assigned By
+                    </th>
                     <th scope="col" className="px-4 py-3 relative w-28">
                       <span className="sr-only">Actions</span>
                     </th>
@@ -655,6 +664,12 @@ export default function Page() {
                       className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
                     >
                       Spent Time
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
+                    >
+                      Assigned By
                     </th>
                     <th scope="col" className="px-4 py-3 relative w-28">
                       <span className="sr-only">Actions</span>
@@ -763,6 +778,9 @@ export default function Page() {
                               : "Not specified"}
                           </p>
                         </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap w-1/6">
+                        {subtask.assignee_name || "Not Specified"}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium w-28">
                         <div className="flex items-center justify-end space-x-3">

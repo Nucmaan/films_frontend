@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import {
   Card,
   CardContent,
@@ -9,8 +9,7 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+ import { format  } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -30,11 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { 
   Search, 
-  Users, 
-  ListTodo, 
-  Timer, 
-  Eye, 
-  CheckCircle, 
+  Users,
   BarChart2, 
   ExternalLink, 
   PieChart, 
@@ -50,119 +45,38 @@ import { Button } from "@/components/ui/button";
 import { useUsersWithCompletedTasks } from "@/lib/analytics/page.js";
 import ReportsAnalyticsSkeleton from "@/components/ReportsAnalyticsSkeleton";
 
-interface CompletedTask {
-  id: number;
-  task_id: number;
-  updated_by: number;
-  status: string;
-  updated_at: string;
-  time_taken_in_hours: string | null;
-  time_taken_in_minutes: number | null;
-  "SubTask.id": number;
-  "SubTask.title": string;
-  "SubTask.status": string;
-  "SubTask.priority": string;
-  "SubTask.estimated_hours": number;
-  "SubTask.description": string;
-  "SubTask.deadline": string;
-  assigned_user: string;
-  profile_image: string;
-}
+ 
 
-interface UserWithCompletedTasks {
-  id: number;
-  name: string;
-  profile_image: string;
-  role: string;
-  work_experience_level: string;
-  completedTasks: CompletedTask[];
-}
-
-interface UserWithStats extends UserWithCompletedTasks {
-  totalHours: number;
-  hourlyRate: number;
-  monthlyCommission: number;
-  taskCount: number;
-}
 
 export default function ReportsAnalyticsPage() {
   const taskServiceUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
-  const { users, isLoading, error, mutate } = useUsersWithCompletedTasks(taskServiceUrl);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState<string>("current");
-
-  const getMonthOptions = () => {
-    const options = [];
-    const currentYear = 2025;
-    options.push({ value: "current", label: "Current Month" });
-    for (let month = 11; month >= 0; month--) {
-      const monthDate = new Date(currentYear, month, 1);
-      const monthValue = format(monthDate, "yyyy-MM");
-      const monthLabel = format(monthDate, "MMMM yyyy");
-      options.push({ value: monthValue, label: monthLabel });
-    }
-    return options;
+  // Initialize selectedMonth to current month in YYYY-MM format
+  const getCurrentMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   };
+  const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth());
 
-  const monthOptions = getMonthOptions();
+  // Add this destructuring to get all needed values from the hook
+  const {
+    users,
+    isLoading,
+    error,
+    apiMessage,
+    totalStaff,
+    totalHours,
+    averageRate,
+    totalCommission
+  } = useUsersWithCompletedTasks(
+    taskServiceUrl,
+    selectedMonth,
+    selectedStatus
+  );
 
-   const filterTasksByMonth = (tasks: CompletedTask[]) => {
-    if (selectedMonth === "current") {
-      return tasks;
-    }
-    const [year, month] = selectedMonth.split("-").map(Number);
-    const startDate = startOfMonth(new Date(year, month - 1));
-    const endDate = endOfMonth(new Date(year, month - 1));
-    return tasks.filter((task: CompletedTask) => {
-      const taskDate = new Date(task.updated_at);
-      return isWithinInterval(taskDate, { start: startDate, end: endDate });
-    });
-  };
-
-  const getRateForExperienceLevel = (experienceLevel: string): number => {
-    switch (experienceLevel) {
-      case "Entry Level":
-        return 5.00;
-      case "Mid Level":
-        return 6.00;
-      case "Senior Level":
-        return 8.00;
-      default:
-        return 5.00;
-    }
-  };
-
-   const usersWithStats: UserWithStats[] = users.map((user: UserWithCompletedTasks) => {
-    const userCompletedTasks = filterTasksByMonth(user.completedTasks);
-    const totalHours = userCompletedTasks.reduce(
-      (sum, task) => sum + (task["SubTask.estimated_hours"] || 0),
-      0
-    );
-    const hourlyRate = getRateForExperienceLevel(user.work_experience_level);
-    const monthlyCommission = totalHours * hourlyRate;
-    return {
-      ...user,
-      completedTasks: userCompletedTasks,
-      totalHours,
-      hourlyRate,
-      monthlyCommission,
-      taskCount: userCompletedTasks.length
-    };
-  });
-
-   const filteredUsers = usersWithStats
-    .filter(user => {
-      const matchesSearch = searchQuery === "" ||
-        user.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = selectedStatus === "all" || user.role === selectedStatus;
-      return matchesSearch && matchesStatus && user.completedTasks.length > 0;
-    })
-    .sort((a, b) => b.monthlyCommission - a.monthlyCommission);
-
-  const totalCommission = filteredUsers.reduce(
-    (sum, user) => sum + user.monthlyCommission,
-    0
+  const filteredUsers = users.filter((user: any) =>
+    searchQuery === "" || user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleDownload = () => {
@@ -181,7 +95,7 @@ export default function ReportsAnalyticsPage() {
       "TOTAL",
       "",
       "",
-      filteredUsers.reduce((sum, u) => sum + u.totalHours, 0).toFixed(1),
+      totalHours.toFixed(1),
       "",
       `$${totalCommission.toFixed(2)}`
     ]);
@@ -192,7 +106,7 @@ export default function ReportsAnalyticsPage() {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    const month = selectedMonth === "current"
+    const month = selectedMonth === getCurrentMonth()
       ? format(new Date(), "MMMM_yyyy")
       : selectedMonth.replace("-", "_");
     link.setAttribute("href", url);
@@ -255,7 +169,7 @@ export default function ReportsAnalyticsPage() {
                       </div>
                     </div>
                     <div className="mt-4 flex items-end gap-2">
-                      <div className="text-3xl font-bold text-gray-900">{filteredUsers.length}</div>
+                      <div className="text-3xl font-bold text-gray-900">{totalStaff}</div>
                       <div className="text-sm text-gray-500 mb-1">with completed tasks</div>
                     </div>
                   </div>
@@ -276,7 +190,7 @@ export default function ReportsAnalyticsPage() {
                     </div>
                     <div className="mt-4 flex items-end gap-2">
                       <div className="text-3xl font-bold text-gray-900">
-                        {filteredUsers.reduce((sum, u) => sum + u.totalHours, 0).toFixed(1)}
+                        {totalHours.toFixed(1)}
                       </div>
                       <div className="text-sm text-gray-500 mb-1">hours worked</div>
                     </div>
@@ -298,9 +212,7 @@ export default function ReportsAnalyticsPage() {
                     </div>
                     <div className="mt-4 flex items-end gap-2">
                       <div className="text-3xl font-bold text-gray-900">
-                        ${filteredUsers.length > 0 
-                            ? (filteredUsers.reduce((sum, u) => sum + u.hourlyRate, 0) / filteredUsers.length).toFixed(2) 
-                            : "0.00"}
+                        ${averageRate.toFixed(2)}
                       </div>
                       <div className="text-sm text-gray-500 mb-1">per hour</div>
                     </div>
@@ -403,39 +315,28 @@ export default function ReportsAnalyticsPage() {
             </Card>
             <Card className="border border-gray-100 shadow-sm">
               <CardContent className="p-3">
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="w-[200px] bg-transparent border-gray-200 rounded-xl h-12">
-                    <div className="flex items-center">
-                      <Calendar className="mr-2 h-4 w-4" />
-                      <SelectValue placeholder="Select month" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent className="bg-white rounded-xl shadow-md p-2 border border-gray-100">
-                    {monthOptions.map(option => (
-                      <SelectItem 
-                        key={option.value} 
-                        value={option.value}
-                        className="cursor-pointer py-3 px-6 rounded-lg hover:bg-blue-50 transition-colors"
-                      >
-                        {option.value === selectedMonth ? (
-                          <span className="text-blue-500 mr-2">✓</span>
-                        ) : (
-                          <span className="mr-2">{option.value === "current" ? "✓" : ""}</span>
-                        )}
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                    <div className="px-2 py-3">
-                      <button 
-                        onClick={handleDownload}
-                        className="w-full text-center text-blue-600 py-3 px-6 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer flex items-center justify-center"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download CSV
-                      </button>
-                    </div>
-                  </SelectContent>
-                </Select>
+                {/* Replace dropdown with month picker */}
+                <div className="flex items-center gap-2">
+                  <label htmlFor="month-picker" className="text-sm text-gray-600">Select Month:</label>
+                  <Input
+                    id="month-picker"
+                    type="month"
+                    value={selectedMonth}
+                    onChange={e => setSelectedMonth(e.target.value)}
+                    min="2025-01"
+                    max="2099-12"
+                    className="w-[200px] bg-transparent border-gray-200 rounded-xl h-12"
+                  />
+                </div>
+                <div className="mt-2">
+                  <button 
+                    onClick={handleDownload}
+                    className="w-full text-center text-blue-600 py-3 px-6 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer flex items-center justify-center"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download CSV
+                  </button>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -450,9 +351,9 @@ export default function ReportsAnalyticsPage() {
                   <div>
                     <CardTitle className="text-lg font-semibold">Team Compensation Summary</CardTitle>
                     <CardDescription className="text-sm text-gray-500">
-                      {selectedMonth === "current" 
+                      {selectedMonth === getCurrentMonth() 
                         ? "Current month - Staff with completed tasks" 
-                        : `${monthOptions.find(m => m.value === selectedMonth)?.label} - Staff with completed tasks`}
+                        : `${selectedMonth} - Staff with completed tasks`}
                     </CardDescription>
                   </div>
                 </div>
@@ -490,14 +391,18 @@ export default function ReportsAnalyticsPage() {
                               <Users className="h-8 w-8 text-gray-400" />
                             </div>
                             <div className="space-y-1 text-center">
-                              <p className="text-lg font-medium text-gray-600">No staff found</p>
-                              <p className="text-sm text-gray-500">No users with completed tasks match your filters</p>
+                              <p className="text-lg font-medium text-gray-600">
+                                {apiMessage || "No staff found"}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {apiMessage ? "" : "No users with completed tasks match your filters"}
+                              </p>
                             </div>
                           </div>
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredUsers.map((user, index) => (
+                      filteredUsers.map((user: any, index: number) => (
                         <TableRow key={user.id} className="hover:bg-blue-50/5 transition-colors duration-150 group border-b border-gray-100">
                           <TableCell className="font-medium text-gray-600">{index + 1}</TableCell>
                           <TableCell>{user.name}</TableCell>
@@ -542,7 +447,7 @@ export default function ReportsAnalyticsPage() {
             <CardFooter className="bg-gray-50 py-3 px-6 text-xs text-gray-500">
               <div className="flex items-center gap-2">
                 <DollarSign className="h-3.5 w-3.5" />
-                <span>Hourly rates are automatically calculated based on work experience level: Entry Level ($5/hr), Mid Level ($6/hr), Senior Level ($8/hr).</span>
+                <span>Hourly rates and stats are provided by the backend.</span>
               </div>
             </CardFooter>
           </Card>
