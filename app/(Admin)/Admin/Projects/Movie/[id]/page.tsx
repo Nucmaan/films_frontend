@@ -30,9 +30,11 @@ export default function EditProjectPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-   const { projects: movieProjects } = useMovieProjects();
+  // Use SWR hook to get Movie projects
+  const { projects: movieProjects } = useMovieProjects();
 
-   const fetchProject = async () => {
+  // Fetch the project data
+  const fetchProject = async () => {
     try {
       console.log('Fetching project with ID:', id);
       
@@ -43,13 +45,15 @@ export default function EditProjectPage() {
         const projectData = response.data.project;
         console.log('Project data successfully loaded:', projectData);
         
-         if (projectData.project_type !== "Movie") {
+        // Verify this is a Movie project
+        if (projectData.project_type !== "Movie") {
           toast.error("This project is not a Movie project");
           router.push('/Admin/Projects/Movie');
           return;
         }
         
-         if (projectData.deadline) {
+        // Debug date formats
+        if (projectData.deadline) {
           console.log('Original deadline:', projectData.deadline);
           console.log('Parsed as Date object:', new Date(projectData.deadline));
           console.log('ISO string format:', new Date(projectData.deadline).toISOString());
@@ -59,33 +63,41 @@ export default function EditProjectPage() {
         
         setProject(projectData);
         
-         
-         if (projectData.project_image) {
+        // Debug the project channel
+        console.log('Project channel from API:', projectData.channel);
+        
+        // Set preview image if project has one
+        if (projectData.project_image) {
           setPreviewImage(projectData.project_image);
         }
       } else {
-         toast.error("Failed to load project");
+        console.error('Failed to load project. Response:', response);
+        toast.error("Failed to load project");
         setTimeout(() => {
           router.push('/Admin/Projects/Movie');
         }, 1500);
       }
     } catch (error: any) {
-       const message = error.response?.data?.message || "Error loading project";
+      console.error('Error fetching project:', error);
+      const message = error.response?.data?.message || "Error loading project";
       toast.error(message);
       setTimeout(() => {
         router.push('/Admin/Projects/Movie');
       }, 1500);
     } finally {
-     }
+      // Removed loading state
+    }
   };
 
   useEffect(() => {
     if (id) {
       fetchProject();
-     }
+      // fetchChannels(); // REMOVE THIS LINE
+    }
   }, [id]);
 
-   useEffect(() => {
+  // Extract available channels from movieProjects
+  useEffect(() => {
     if (movieProjects && movieProjects.length > 0) {
       const uniqueChannels = [...new Set(movieProjects.map((project: any) => 
         project.channel || "unknown"
@@ -94,24 +106,30 @@ export default function EditProjectPage() {
     }
   }, [movieProjects]);
 
-   useEffect(() => {
+  // Update available channels when project loads to ensure current project's channel is included
+  useEffect(() => {
     if (project && project.channel && availableChannels.length > 0) {
-       if (!availableChannels.includes(project.channel)) {
-         setAvailableChannels(prev => [...prev, project.channel].sort());
+      // Check if project's channel is in available channels
+      if (!availableChannels.includes(project.channel)) {
+        console.log('Project channel not in available channels, adding it:', project.channel);
+        setAvailableChannels(prev => [...prev, project.channel].sort());
       }
     }
   }, [project, availableChannels]);
 
-   const resetImageStates = () => {
+  // Reset image states
+  const resetImageStates = () => {
     setPreviewImage(project?.project_image || null);
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle image change
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-       if (!file.type.startsWith('image/')) {
+      // Validate if it's actually an image
+      if (!file.type.startsWith('image/')) {
         toast.error('Please select an image file');
         return;
       }
@@ -131,18 +149,21 @@ export default function EditProjectPage() {
       };
       reader.readAsDataURL(file);
     } else {
-       setPreviewImage(project?.project_image || null);
+      // If no new file is selected, revert to the original project image
+      setPreviewImage(project?.project_image || null);
       setSelectedFile(null);
     }
   };
 
-   const handleImageClick = () => {
+  // Handle clicking on the image area to select a file
+  const handleImageClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
 
-   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  // Handle form submission
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
     if (!project) return;
@@ -153,7 +174,8 @@ export default function EditProjectPage() {
       const form = event.target as HTMLFormElement;
       const formData = new FormData();
       
-       const name = (form.elements.namedItem('name') as HTMLInputElement).value;
+      // Get form values
+      const name = (form.elements.namedItem('name') as HTMLInputElement).value;
       const deadlineInput = (form.elements.namedItem('deadline') as HTMLInputElement).value;
       const status = (form.elements.namedItem('status') as HTMLSelectElement).value;
       const priority = (form.elements.namedItem('priority') as HTMLSelectElement).value;
@@ -161,13 +183,15 @@ export default function EditProjectPage() {
       const progress = (form.elements.namedItem('progress') as HTMLInputElement).value;
       const description = (form.elements.namedItem('description') as HTMLTextAreaElement).value;
       
-       
-       formData.append('id', project.id);
+      console.log('Raw deadline input:', deadlineInput);
+      
+      // Append all form data
+      formData.append('id', project.id);
       formData.append('name', name);
       formData.append('deadline', deadlineInput); 
       formData.append('status', status);
       formData.append('priority', priority);
-      formData.append('project_type', 'Movie');  
+      formData.append('project_type', 'Movie'); // Always set to Movie
       formData.append('channel', channel);
       formData.append('progress', progress);
       formData.append('description', description);
@@ -176,7 +200,8 @@ export default function EditProjectPage() {
         formData.append('project_image', selectedFile);
       }
       
-       for (const pair of formData.entries()) {
+      console.log('Form data being sent:');
+      for (const pair of formData.entries()) {
         console.log(pair[0], pair[1]);
       }
       
@@ -190,7 +215,8 @@ export default function EditProjectPage() {
         }
       );
       
-       
+      console.log('Update response:', response);
+      
       if (response.data.success) {
         toast.success("Project updated successfully");
         router.push('/Admin/Projects/Movie');
@@ -199,7 +225,8 @@ export default function EditProjectPage() {
       }
     } catch (error: any) {
       const message = error.response?.data?.message || "Failed to update project";
-       toast.error(message);
+      console.error("Project update error:", error);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -246,7 +273,8 @@ export default function EditProjectPage() {
           <input type="hidden" name="id" value={project.id} />
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-             <div className="md:col-span-1">
+            {/* Image upload section */}
+            <div className="md:col-span-1">
               <div 
                 onClick={handleImageClick}
                 className="w-full aspect-video bg-gray-100 rounded-lg flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-gray-300 hover:bg-gray-50 mb-2"
@@ -291,7 +319,8 @@ export default function EditProjectPage() {
               <p className="text-xs text-gray-500 text-center">Recommended size: 1280x720px</p>
             </div>
             
-             <div className="md:col-span-2">
+            {/* Main content */}
+            <div className="md:col-span-2">
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Project Name</label>
@@ -351,10 +380,11 @@ export default function EditProjectPage() {
                     name="channel"
                     required
                     defaultValue={project.channel || "unknown"}
-                    key={`${project.channel}-${availableChannels.length}`}  
+                    key={`${project.channel}-${availableChannels.length}`} // Force re-render when project or channels change
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                   >
-                     {project.channel && !availableChannels.includes(project.channel) && (
+                    {/* Always include the current project's channel if it exists */}
+                    {project.channel && !availableChannels.includes(project.channel) && (
                       <option key={project.channel} value={project.channel}>
                         {project.channel}
                       </option>

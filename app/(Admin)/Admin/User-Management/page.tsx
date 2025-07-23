@@ -39,7 +39,8 @@ const stringToColor = (str: string) => {
   return `hsl(${hue}, 70%, 50%)`;
 };
 
- const SkeletonLine = ({ width = "w-full" }: { width?: string }) => (
+// Skeleton Components
+const SkeletonLine = ({ width = "w-full" }: { width?: string }) => (
   <div className={`h-4 bg-gray-200 rounded animate-pulse ${width}`}></div>
 );
 
@@ -328,7 +329,8 @@ const UserForm = ({ user = null, onSubmit, onCancel }: { user?: any; onSubmit: (
   );
 };
 
- const Pagination = ({ 
+// Pagination Component
+const Pagination = ({ 
   currentPage, 
   totalPages, 
   onPageChange, 
@@ -464,7 +466,8 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(20);
 
-   const users = useMemo(() => {
+  // Transform users data
+  const users = useMemo(() => {
     return rawUsers.map((user: any) => ({
       id: user.id,
       name: user.name,
@@ -501,7 +504,8 @@ export default function UsersPage() {
     });
   }, [users, searchQuery, selectedRole]);
 
-   const totalPages = Math.ceil(filteredUsers.length / entriesPerPage);
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredUsers.length / entriesPerPage);
   const startIndex = (currentPage - 1) * entriesPerPage;
   const endIndex = startIndex + entriesPerPage;
   const currentUsers = filteredUsers.slice(startIndex, endIndex);
@@ -509,7 +513,8 @@ export default function UsersPage() {
   const startEntry = filteredUsers.length === 0 ? 0 : startIndex + 1;
   const endEntry = Math.min(endIndex, filteredUsers.length);
 
-   useEffect(() => {
+  // Reset to first page when filters change
+  useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, selectedRole, entriesPerPage]);
 
@@ -546,7 +551,8 @@ export default function UsersPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-       <div className="flex items-center justify-between mb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">User Management</h1>
           <p className="text-gray-600">Manage system users and roles</p>
@@ -561,7 +567,8 @@ export default function UsersPage() {
         </button>
       </div>
 
-       <div className="bg-white rounded-lg border p-4 mb-6">
+      {/* Filters */}
+      <div className="bg-white rounded-lg border p-4 mb-6">
         <div className="flex gap-4">
           <div className="flex-1 relative">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -588,7 +595,8 @@ export default function UsersPage() {
         </div>
       </div>
 
-       <div className="bg-white rounded-lg border overflow-hidden">
+      {/* Users Table */}
+      <div className="bg-white rounded-lg border overflow-hidden">
         <div className="p-4 border-b">
           <h2 className="font-semibold">
             Users ({isLoading ? '...' : filteredUsers.length})
@@ -611,7 +619,8 @@ export default function UsersPage() {
             </thead>
             <tbody className="divide-y">
               {isLoading ? (
-                 Array.from({ length: entriesPerPage }).map((_, index) => (
+                // Show skeleton rows while loading
+                Array.from({ length: entriesPerPage }).map((_, index) => (
                   <TableRowSkeleton key={`skeleton-${index}`} />
                 ))
               ) : currentUsers.length === 0 ? (
@@ -677,7 +686,8 @@ export default function UsersPage() {
           </table>
         </div>
 
-         {!isLoading && filteredUsers.length > 0 && (
+        {/* Pagination */}
+        {!isLoading && filteredUsers.length > 0 && (
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -691,7 +701,8 @@ export default function UsersPage() {
         )}
       </div>
 
-       <Modal isOpen={!!viewUser} onClose={() => setViewUser(null)} title="User Details">
+      {/* View User Modal */}
+      <Modal isOpen={!!viewUser} onClose={() => setViewUser(null)} title="User Details">
         {viewUser && (
           <div className="p-6">
             <div className="flex items-center gap-4 mb-6">
@@ -751,17 +762,20 @@ export default function UsersPage() {
         )}
       </Modal>
 
-       <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Add New User">
+      {/* Add User Modal */}
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Add New User">
         <UserForm onSubmit={handleFormSubmit} onCancel={() => setShowAddModal(false)} />
       </Modal>
 
-       <Modal isOpen={!!editUser} onClose={() => setEditUser(null)} title="Edit User">
+      {/* Edit User Modal */}
+      <Modal isOpen={!!editUser} onClose={() => setEditUser(null)} title="Edit User">
         {editUser && (
           <UserForm user={editUser} onSubmit={handleFormSubmit} onCancel={() => setEditUser(null)} />
         )}
       </Modal>
 
-       <Modal isOpen={!!deleteUser} onClose={() => setDeleteUser(null)} title="Confirm Delete">
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={!!deleteUser} onClose={() => setDeleteUser(null)} title="Confirm Delete">
         {deleteUser && (
           <div className="p-6 text-center">
             <div className="text-yellow-500 mb-4">

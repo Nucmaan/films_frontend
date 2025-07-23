@@ -39,13 +39,11 @@ const Project = {
     );
   },
   
-  deleteProject: async (projectId, page) => {
+  deleteProject: async (projectId) => {
     return await axios.delete(
-      `${projectService}/api/project/projectDelete/${projectId}?page=${page}`
+      `${projectService}/api/project/projectDelete/${projectId}`
     );
   }
-  
-
 };
 
 export default Project;

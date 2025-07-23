@@ -115,6 +115,7 @@ export default function NotificationsPage() {
           )}
         </div>
 
+        {/* Pagination */}
         {meta && meta.totalPages > 1 && (
           <div className="flex justify-center items-center gap-4 py-6">
             <button

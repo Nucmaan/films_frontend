@@ -93,15 +93,18 @@ export default function MyTasksPage() {
   const parseFileUrls = (fileUrlString: string | undefined) => {
     if (!fileUrlString) return [];
     try {
-       let cleaned = fileUrlString.trim();
+      // Remove extra quotes if present
+      let cleaned = fileUrlString.trim();
       if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
         cleaned = cleaned.slice(1, -1);
       }
-       if (cleaned.startsWith('[')) {
+      // Try to parse as JSON array
+      if (cleaned.startsWith('[')) {
         const parsed = JSON.parse(cleaned);
         return Array.isArray(parsed) ? parsed : [];
       }
-       return [cleaned];
+      // Otherwise, treat as a single URL string
+      return [cleaned];
     } catch (error) {
       console.error('Error parsing file URLs:', error);
       return [];
@@ -109,8 +112,10 @@ export default function MyTasksPage() {
   };
 
   const handleTaskClick = (task: TaskStatusUpdate) => {
-     const parsedFiles = parseFileUrls(task["SubTask.file_url"]);
-     setSelectedTask(task);
+    console.log('Raw file_url:', task["SubTask.file_url"]);
+    const parsedFiles = parseFileUrls(task["SubTask.file_url"]);
+    console.log('Parsed files:', parsedFiles);
+    setSelectedTask(task);
     setShowModal(true);
   };
 
@@ -214,7 +219,8 @@ export default function MyTasksPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+        {/* Header Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">My Tasks</h1>
@@ -266,20 +272,20 @@ export default function MyTasksPage() {
               </div>
               
               <select
-                value="all"  
+                value="all" // Removed selectedStatus state
                 onChange={(e) => {
-                   
+                  // No-op, as status filtering is removed
                 }}
                 className="px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors appearance-none cursor-pointer"
               >
                 <option value="all">All Status</option>
-                
+                {/* Removed status options */}
               </select>
             </div>
           </div>
         </div>
 
-        
+        {/* Task Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center gap-4">
@@ -328,7 +334,7 @@ export default function MyTasksPage() {
           </div>
         </div>
 
-         
+        {/* Tasks Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTasks.map((task) => (
             <div
@@ -338,7 +344,7 @@ export default function MyTasksPage() {
             >
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
-                   
+                  {/* Removed user image and Unassigned label, only show title */}
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900 group-hover:text-[#ff4e00] transition-colors">
                       {task["SubTask.title"] || 'Untitled Task'}
@@ -408,7 +414,7 @@ export default function MyTasksPage() {
             <button
               onClick={() => {
                 setSelectedMonth(new Date());
-               
+                // setSelectedStatus("all"); // Removed status reset
               }}
               className="mt-4 text-[#ff4e00] font-medium hover:text-[#ff4e00]/80 transition-colors"
             >
@@ -417,11 +423,11 @@ export default function MyTasksPage() {
           </div>
         )}
 
-         
+        {/* Task Details Modal */}
         {showModal && selectedTask && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-               
+              {/* Task Details Heading */}
               <div className="flex items-center justify-between p-6 border-b border-gray-100">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 mb-1">Task Details</h2>
@@ -496,7 +502,7 @@ export default function MyTasksPage() {
                     </div>
                   )}
 
-                   
+                  {/* Attached Files */}
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-4">Attached Files</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -525,7 +531,7 @@ export default function MyTasksPage() {
                     )}
                   </div>
 
-                  
+                  {/* Timestamps */}
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
                     <div>
                       <h3 className="text-sm font-medium text-gray-500 mb-2">Created</h3>

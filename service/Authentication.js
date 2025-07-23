@@ -5,7 +5,8 @@ export const swrFetcher = url => axios.get(url, { withCredentials: true }).then(
 
 const userService = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
 
- export const useUsers = () => {
+// SWR Hooks
+export const useUsers = () => {
   const { data, error, isLoading, mutate: refreshUsers } = useSWR(
     `${userService}/api/auth/users`,
     swrFetcher,
@@ -85,7 +86,8 @@ const Authentication = {
       }
     );
     
-     await mutate(`${userService}/api/auth/users`);
+    // Invalidate and revalidate users cache
+    await mutate(`${userService}/api/auth/users`);
     
     return response;
   },
@@ -102,7 +104,8 @@ const Authentication = {
       }
     );
     
-     await mutate(`${userService}/api/auth/users`);
+    // Invalidate and revalidate users cache
+    await mutate(`${userService}/api/auth/users`);
     await mutate(`${userService}/api/auth/users/${userId}`);
     
     return response;
@@ -114,7 +117,8 @@ const Authentication = {
       { withCredentials: true }
     );
     
-     await mutate(`${userService}/api/auth/users`);
+    // Invalidate and revalidate users cache
+    await mutate(`${userService}/api/auth/users`);
     
     return response;
   }

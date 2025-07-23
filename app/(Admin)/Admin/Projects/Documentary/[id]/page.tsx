@@ -84,18 +84,18 @@ export default function EditProjectPage() {
         router.push('/Admin/Projects/Documentary');
       }, 1500);
     } finally {
-       
+      // Removed loading state
     }
   };
 
   useEffect(() => {
     if (id) {
       fetchProject();
-      
+      // fetchChannels(); // REMOVE THIS LINE
     }
   }, [id]);
 
-   
+  // Extract available channels from documentaryProjects
   useEffect(() => {
     if (documentaryProjects && documentaryProjects.length > 0) {
       const uniqueChannels = [...new Set(documentaryProjects.map((project: any) => 
@@ -105,18 +105,18 @@ export default function EditProjectPage() {
     }
   }, [documentaryProjects]);
 
-   
+  // Reset image states
   const resetImageStates = () => {
     setPreviewImage(project?.project_image || null);
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-   
+  // Handle image change
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-       
+      // Validate if it's actually an image
       if (!file.type.startsWith('image/')) {
         toast.error('Please select an image file');
         return;
@@ -137,20 +137,20 @@ export default function EditProjectPage() {
       };
       reader.readAsDataURL(file);
     } else {
-       
+      // If no new file is selected, revert to the original project image
       setPreviewImage(project?.project_image || null);
       setSelectedFile(null);
     }
   };
 
-   
+  // Handle clicking on the image area to select a file
   const handleImageClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
 
-  
+  // Handle form submission
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
@@ -162,7 +162,7 @@ export default function EditProjectPage() {
       const form = event.target as HTMLFormElement;
       const formData = new FormData();
       
-      
+      // Get form values
       const name = (form.elements.namedItem('name') as HTMLInputElement).value;
       const deadlineInput = (form.elements.namedItem('deadline') as HTMLInputElement).value;
       const status = (form.elements.namedItem('status') as HTMLSelectElement).value;
@@ -173,13 +173,13 @@ export default function EditProjectPage() {
       
       console.log('Raw deadline input:', deadlineInput);
       
-       
+      // Append all form data
       formData.append('id', project.id);
       formData.append('name', name);
       formData.append('deadline', deadlineInput); 
       formData.append('status', status);
       formData.append('priority', priority);
-      formData.append('project_type', 'Documentary');  
+      formData.append('project_type', 'Documentary'); // Always set to Movie
       formData.append('channel', channel);
       formData.append('progress', progress);
       formData.append('description', description);
@@ -261,7 +261,7 @@ export default function EditProjectPage() {
           <input type="hidden" name="id" value={project.id} />
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
+            {/* Image upload section */}
             <div className="md:col-span-1">
               <div 
                 onClick={handleImageClick}
@@ -307,7 +307,7 @@ export default function EditProjectPage() {
               <p className="text-xs text-gray-500 text-center">Recommended size: 1280x720px</p>
             </div>
             
-            
+            {/* Main content */}
             <div className="md:col-span-2">
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
@@ -371,7 +371,7 @@ export default function EditProjectPage() {
                     key={`${project.channel}-${availableChannels.length}`} // Force re-render when project or channels change
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                   >
-                    
+                    {/* Always include the current project's channel if it exists */}
                     {project.channel && !availableChannels.includes(project.channel) && (
                       <option key={project.channel} value={project.channel}>
                         {project.channel}

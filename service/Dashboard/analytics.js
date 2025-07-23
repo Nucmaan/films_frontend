@@ -7,7 +7,8 @@ const userServiceUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
 const projectService = process.env.NEXT_PUBLIC_PROJECT_SERVICE_URL;
 const taskService = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
 
- export const useUserDashboard = () => {
+// SWR Hooks with proper caching (like Authentication.js)
+export const useUserDashboard = () => {
   const { data, error, isLoading, mutate } = useSWR(
     `${userServiceUrl}/api/auth/dashboard`,
     swrFetcher,
@@ -56,7 +57,8 @@ export const useTaskDashboard = () => {
     }
   );
 
-   const normalizedData = typeof data === "number" ? { count: data } : data;
+  // Normalize: if data is a number, wrap it in { count: data }
+  const normalizedData = typeof data === "number" ? { count: data } : data;
 
   return {
     data: normalizedData,
@@ -77,7 +79,8 @@ export const useSubtaskDashboard = () => {
     }
   );
 
-   const normalizedData = typeof data === "number" ? { count: data } : data;
+  // Normalize: if data is a number, wrap it in { count: data }
+  const normalizedData = typeof data === "number" ? { count: data } : data;
 
   return {
     data: normalizedData,
@@ -106,7 +109,8 @@ export const useMyDashboardProjects = () => {
   };
 };
 
- export const getUserList = () => {
+// Legacy functions for backward compatibility
+export const getUserList = () => {
     return axios
         .get(`${userServiceUrl}/api/auth/dashboard`, {
             withCredentials: true,

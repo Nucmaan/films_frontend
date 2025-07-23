@@ -75,7 +75,8 @@ export default function UserReportsPage() {
   const taskServiceUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
   const { user, isLoading, error, mutate } = useUserWithTasks(taskServiceUrl, userId);
 
-   const getRateForExperienceLevel = (experienceLevel: string): number => {
+  // Define rates by work experience level
+  const getRateForExperienceLevel = (experienceLevel: string): number => {
     switch (experienceLevel) {
       case "Entry Level":
         return 5.00;
@@ -88,19 +89,22 @@ export default function UserReportsPage() {
     }
   };
 
-   const getUserHourlyRate = (): number => {
-    if (!user?.work_experience_level) return 5.00;  
+  // Get the hourly rate based on user's experience level
+  const getUserHourlyRate = (): number => {
+    if (!user?.work_experience_level) return 5.00; // Default rate
     return getRateForExperienceLevel(user.work_experience_level);
   };
 
-   const calculateTotals = () => {
+  // Calculate totals
+  const calculateTotals = () => {
     let totalHours = 0;
     let totalAmount = 0;
     let totalSpentTime = 0;
     const hourlyRate = getUserHourlyRate();
     (user?.tasks || []).forEach((task: TaskStatusUpdate) => {
       const hours = task["SubTask.estimated_hours"] || 0;
-       const spentHours = task.time_taken_in_hours ? parseFloat(task.time_taken_in_hours) : 0;
+      // Calculate spent time from hours and minutes
+      const spentHours = task.time_taken_in_hours ? parseFloat(task.time_taken_in_hours) : 0;
       const spentMinutes = task.time_taken_in_minutes ? task.time_taken_in_minutes / 60 : 0;
       const totalSpent = spentHours + spentMinutes;
       totalHours += hours;
@@ -112,17 +116,21 @@ export default function UserReportsPage() {
 
   const { totalHours, totalAmount, totalSpentTime } = calculateTotals();
 
-   const taskUpdates = user?.tasks || [];
+  // Calculate statistics
+  const taskUpdates = user?.tasks || [];
   const totalTasks = taskUpdates.length;
-   const uniqueTaskIds = new Set(taskUpdates.map((task: TaskStatusUpdate) => task.task_id));
+  // Calculate unique tasks (by task_id)
+  const uniqueTaskIds = new Set(taskUpdates.map((task: TaskStatusUpdate) => task.task_id));
   const uniqueTasks = uniqueTaskIds.size;
-   const tasksByStatus = {
+  // Count tasks by status
+  const tasksByStatus = {
     "To Do": taskUpdates.filter((task: TaskStatusUpdate) => task["SubTask.status"] === "To Do").length,
     "In Progress": taskUpdates.filter((task: TaskStatusUpdate) => task["SubTask.status"] === "In Progress").length,
     "Review": taskUpdates.filter((task: TaskStatusUpdate) => task["SubTask.status"] === "Review").length,
     "Completed": taskUpdates.filter((task: TaskStatusUpdate) => task["SubTask.status"] === "Completed").length,
   };
-   const completionRate = totalTasks > 0 
+  // Calculate completion rate
+  const completionRate = totalTasks > 0 
     ? Math.round((tasksByStatus["Completed"] / totalTasks) * 100) 
     : 0;
 
@@ -167,7 +175,8 @@ export default function UserReportsPage() {
 
       <div className="container mx-auto px-6 py-8">
         <div className="flex flex-col gap-8">
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* User profile and summary */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <Card className="lg:col-span-1 border border-gray-100 overflow-hidden shadow-sm hover:shadow transition-all rounded-2xl">
               <CardContent className="p-0">
                 <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-white">
@@ -195,7 +204,8 @@ export default function UserReportsPage() {
               </CardContent>
             </Card>
 
-             <Card className="border border-gray-100 shadow-sm hover:shadow-md transition-all rounded-2xl overflow-hidden">
+            {/* Summary stats cards */}
+            <Card className="border border-gray-100 shadow-sm hover:shadow-md transition-all rounded-2xl overflow-hidden">
               <CardContent className="p-0">
                 <div className="flex items-stretch h-full">
                   <div className="w-2 bg-blue-500"></div>
@@ -296,7 +306,8 @@ export default function UserReportsPage() {
             </Card>
           </div>
 
-           <Card className="border border-gray-100 shadow-sm hover:shadow-md transition-all rounded-2xl overflow-hidden">
+          {/* Task Status Distribution */}
+          <Card className="border border-gray-100 shadow-sm hover:shadow-md transition-all rounded-2xl overflow-hidden">
             <CardHeader className="border-b border-gray-100 py-5 px-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-indigo-50 rounded-xl">
@@ -369,7 +380,8 @@ export default function UserReportsPage() {
             </CardContent>
           </Card>
 
-           <Card className="border border-gray-100 bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+          {/* Task List */}
+          <Card className="border border-gray-100 bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
             <CardHeader className="border-b border-gray-100 py-5 px-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-50 rounded-xl">
@@ -414,7 +426,8 @@ export default function UserReportsPage() {
                       </TableRow>
                     ) : (
                       taskUpdates.map((task: TaskStatusUpdate, index: number) => {
-                         let statusBadge;
+                        // Determine status badge style
+                        let statusBadge;
                         switch (task["SubTask.status"]) {
                           case "To Do":
                             statusBadge = <Badge variant="outline" className="px-2.5 py-1 bg-gray-50 border-gray-200 text-gray-700 font-medium rounded-full">To Do</Badge>;
@@ -432,21 +445,27 @@ export default function UserReportsPage() {
                             statusBadge = <Badge variant="outline" className="px-2.5 py-1 rounded-full">{task["SubTask.status"]}</Badge>;
                         }
 
-                         const deadline = task["SubTask.deadline"] 
+                        // Format deadline
+                        const deadline = task["SubTask.deadline"] 
                           ? format(new Date(task["SubTask.deadline"]), "MMM dd, yyyy") 
                           : "N/A";
 
-                         const deadlinePassed = task["SubTask.deadline"] && new Date(task["SubTask.deadline"]) < new Date() && task["SubTask.status"] !== "Completed";
+                        // Check if deadline has passed
+                        const deadlinePassed = task["SubTask.deadline"] && new Date(task["SubTask.deadline"]) < new Date() && task["SubTask.status"] !== "Completed";
 
-                         const lastUpdated = format(new Date(task.updated_at), "MMM dd, yyyy HH:mm");
+                        // Format updated date
+                        const lastUpdated = format(new Date(task.updated_at), "MMM dd, yyyy HH:mm");
                         
-                         const spentHours = task.time_taken_in_hours ? parseFloat(task.time_taken_in_hours) : 0;
+                        // Calculate spent time
+                        const spentHours = task.time_taken_in_hours ? parseFloat(task.time_taken_in_hours) : 0;
                         const spentMinutes = task.time_taken_in_minutes ? task.time_taken_in_minutes / 60 : 0;
                         const spentTime = spentHours + spentMinutes;
                         
-                         const hourlyRate = getUserHourlyRate();
+                        // Get the hourly rate based on user's experience level
+                        const hourlyRate = getUserHourlyRate();
                         
-                         const taskTotal = (task["SubTask.estimated_hours"] || 0) * hourlyRate;
+                        // Calculate the total for this task
+                        const taskTotal = (task["SubTask.estimated_hours"] || 0) * hourlyRate;
 
                         return (
                           <TableRow 

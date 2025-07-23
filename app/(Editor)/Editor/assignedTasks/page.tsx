@@ -76,7 +76,7 @@ export default function AssignedTasksPage() {
       const data = await response.json();
       if (data.success) {
         toast.success('Status updated successfully');
-        fetchTasks();  
+        fetchTasks(); // Refresh tasks
         setShowStatusModal(false);
         setSelectedStatus('');
       } else {
@@ -124,13 +124,17 @@ export default function AssignedTasksPage() {
     if (!fileUrlString) return [];
     
     try {
-       if (fileUrlString.trim().startsWith('[')) {
+      // Check if it looks like a JSON array
+      if (fileUrlString.trim().startsWith('[')) {
         return JSON.parse(fileUrlString);
       } else {
-         return [fileUrlString];
+        // It's a plain URL string, so return it as an array
+        return [fileUrlString];
       }
     } catch (error) {
-        return [fileUrlString];
+      console.error('Error parsing file URLs:', error);
+      // If parsing fails, treat it as a single URL
+      return [fileUrlString];
     }
   };
 
@@ -177,7 +181,7 @@ export default function AssignedTasksPage() {
 
     try {
       const response = await fetch(`${taskUrl}/api/task-assignment/submitTask/${selectedTask.id}`, {
-        method: 'PUT', 
+        method: 'PUT', // Changed to PUT method
         body: formData,
       });
 
@@ -194,7 +198,8 @@ export default function AssignedTasksPage() {
         toast.error(data.message || 'Failed to submit task');
       }
     } catch (error) {
-       toast.error('Error submitting task');
+      console.error('Error submitting task:', error);
+      toast.error('Error submitting task');
     } finally {
       setIsSubmitting(false);
     }
@@ -207,7 +212,8 @@ export default function AssignedTasksPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-         <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8 overflow-hidden">
+        {/* Header Section */}
+        <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-[#ff4e00]/5 to-blue-500/5"></div>
           <div className="relative z-10">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
@@ -231,7 +237,8 @@ export default function AssignedTasksPage() {
               </div>
               
               <div className="flex flex-col lg:flex-row gap-4">
-                 <div className="relative flex-1 max-w-md">
+                {/* Search Bar */}
+                <div className="relative flex-1 max-w-md">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <FiClock className="h-5 w-5 text-gray-400" />
                   </div>
@@ -410,7 +417,8 @@ export default function AssignedTasksPage() {
           </div>
         </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Enhanced Tasks Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTasks.map((task, index) => (
             <div
               key={task.id}
@@ -421,14 +429,16 @@ export default function AssignedTasksPage() {
                 setShowModal(true);
               }}
             >
-                <div className={`absolute top-0 left-0 w-full h-1 ${
+              {/* Priority Indicator */}
+              <div className={`absolute top-0 left-0 w-full h-1 ${
                 task.priority === 'Critical' ? 'bg-gradient-to-r from-red-500 to-red-600' :
                 task.priority === 'High' ? 'bg-gradient-to-r from-orange-500 to-orange-600' :
                 task.priority === 'Medium' ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
                 'bg-gradient-to-r from-green-500 to-green-600'
               }`}></div>
 
-               <div className="absolute inset-0 bg-gradient-to-br from-[#ff4e00]/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              {/* Hover Background Effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#ff4e00]/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               
               <div className="relative z-10 p-6">
                 <div className="flex items-start justify-between mb-4">
@@ -598,7 +608,8 @@ export default function AssignedTasksPage() {
           </div>
         )}
 
-         {showStatusModal && selectedTask && (
+        {/* Status Update Modal */}
+        {showStatusModal && selectedTask && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
               <div className="p-6">
@@ -650,7 +661,8 @@ export default function AssignedTasksPage() {
           </div>
         )}
 
-         {showModal && selectedTask && (
+        {/* Task Details Modal */}
+        {showModal && selectedTask && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
               <div className="p-6 border-b border-gray-100">
@@ -708,7 +720,8 @@ export default function AssignedTasksPage() {
                     </div>
                   </div>
 
-                   <div>
+                  {/* Attachments */}
+                  <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-4">Attachments</h3>
                     <div className="grid grid-cols-1 gap-3">
                       {parseFileUrls(selectedTask.file_url).map((url: string, index: number) => (
@@ -732,7 +745,8 @@ export default function AssignedTasksPage() {
                     </div>
                   </div>
 
-                   <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                  {/* Timestamps */}
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                     <div>
                       <h3 className="text-sm font-medium text-gray-500 mb-2">Created</h3>
                       <p className="text-gray-900">{format(new Date(selectedTask.createdAt), 'MMM dd, yyyy HH:mm')}</p>
@@ -743,10 +757,12 @@ export default function AssignedTasksPage() {
                     </div>
                   </div>
 
-                   <div className="border-t pt-6">
+                  {/* Submit Task Section */}
+                  <div className="border-t pt-6">
                     <h3 className="text-lg font-medium text-gray-900 mb-4">Completed</h3>
                     <div className="space-y-4">
-                       <div className="flex justify-end gap-3">
+                      {/* File upload UI removed */}
+                      <div className="flex justify-end gap-3">
                         <button
                           onClick={() => setShowModal(false)}
                           className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff4e00] cursor-pointer"

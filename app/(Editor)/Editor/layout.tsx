@@ -68,7 +68,8 @@ export default function EditorLayout({ children }: AdminLayoutProps) {
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
-     const storedTime = localStorage.getItem('lastNotificationOpenTime');
+    // Load lastOpenedTime from localStorage
+    const storedTime = localStorage.getItem('lastNotificationOpenTime');
     if (storedTime) {
       setLastOpenedTime(new Date(storedTime));
     }
@@ -111,7 +112,8 @@ export default function EditorLayout({ children }: AdminLayoutProps) {
     };
   }, []);
 
-   useEffect(() => {
+  // Fetch notifications
+  useEffect(() => {
     const fetchNotifications = async () => {
       if (!user?.id) return;
       
@@ -130,15 +132,17 @@ export default function EditorLayout({ children }: AdminLayoutProps) {
         
         const data = await response.json();
         
-         const formattedNotifications = data.data.map((notification: Notification) => ({
+        // Transform the notifications
+        const formattedNotifications = data.data.map((notification: Notification) => ({
           ...notification,
-          read: false,  
+          read: false, // Default as unread
           time: formatTimeAgo(new Date(notification.created_at))
         }));
         
         setNotifications(formattedNotifications);
         
-         if (lastOpenedTime) {
+        // Only count notifications that came after the last time notifications were opened
+        if (lastOpenedTime) {
           const newNotifications = formattedNotifications.filter(
             (n: Notification) => new Date(n.created_at) > lastOpenedTime
           );
@@ -158,7 +162,7 @@ export default function EditorLayout({ children }: AdminLayoutProps) {
     }
   }, [user?.id, lastOpenedTime]);
 
-   
+  // Helper function to format date as time ago
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -210,10 +214,13 @@ export default function EditorLayout({ children }: AdminLayoutProps) {
 
   const handleNotificationClick = () => {
     if (!isNotificationOpen) {
-       const now = new Date();
+      // When opening notifications, set the current time as the last opened time
+      const now = new Date();
       setLastOpenedTime(now);
-       localStorage.setItem('lastNotificationOpenTime', now.toISOString());
-       setUnreadCount(0);
+      // Store in localStorage for persistence across refreshes
+      localStorage.setItem('lastNotificationOpenTime', now.toISOString());
+      // Reset the unread count to zero
+      setUnreadCount(0);
     }
     setIsNotificationOpen(!isNotificationOpen);
   };
@@ -246,7 +253,8 @@ export default function EditorLayout({ children }: AdminLayoutProps) {
           </div>
 
           <div className="flex items-center space-x-4">
-             <div className="relative" ref={notificationRef}>
+            {/* Notification Bell */}
+            <div className="relative" ref={notificationRef}>
               <button 
                 className="flex items-center justify-center p-2 rounded-full hover:bg-[#fff1ec] transition-all relative"
                 onClick={handleNotificationClick}

@@ -1,6 +1,6 @@
 "use client"
 import React from 'react';
-import { useSoundEngineers } from '@/lib/notification/page';  
+import { useSoundEngineers } from '@/lib/notification/page'; // adjust path as needed
 
 interface Assigner {
   name: string;
@@ -81,7 +81,8 @@ function SoundEngineerTasksSkeleton() {
 export default function SoundEngineer() {
   const { users, isLoading, isError } = useSoundEngineers();
 
-   const soundEngineerMap: {
+  // Group by Sound Engineer (assigner)
+  const soundEngineerMap: {
     [engineerName: string]: {
       engineer: Assigner;
       tasks: CompletedTask[];
@@ -150,7 +151,7 @@ export default function SoundEngineer() {
                   <th className="p-2 text-left">Task Title</th>
                   <th className="p-2 text-left">Description</th>
                   <th className="p-2 text-left">Status</th>
-                  <th className="p-2 text-left">Actual Time</th>
+                  <th className="p-2 text-left">Estimated Hours</th>
                   <th className="p-2 text-left">Time Spent</th>
                   <th className="p-2 text-left">Assignee</th>
                 </tr>

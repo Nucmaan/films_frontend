@@ -94,9 +94,71 @@ export default function ReportsAnalyticsPage() {
     selectedStatus
   );
 
+<<<<<<< HEAD
   // Filtered users will now also correctly infer its type as User[]
   const filteredUsers = users.filter((user: User) => // Explicitly type user here for clarity, though it might be inferred
     searchQuery === "" || user.name.toLowerCase().includes(searchQuery.toLowerCase())
+=======
+  // Filter completedTasks by selected month
+  const filterTasksByMonth = (tasks: CompletedTask[]) => {
+    if (selectedMonth === "current") {
+      return tasks;
+    }
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const startDate = startOfMonth(new Date(year, month - 1));
+    const endDate = endOfMonth(new Date(year, month - 1));
+    return tasks.filter((task: CompletedTask) => {
+      const taskDate = new Date(task.updated_at);
+      return isWithinInterval(taskDate, { start: startDate, end: endDate });
+    });
+  };
+
+  const getRateForExperienceLevel = (experienceLevel: string): number => {
+    switch (experienceLevel) {
+      case "Entry Level":
+        return 5.00;
+      case "Mid Level":
+        return 6.00;
+      case "Senior Level":
+        return 8.00;
+      default:
+        return 5.00;
+    }
+  };
+
+  // Calculate stats for each user
+  const usersWithStats: UserWithStats[] = users.map((user: UserWithCompletedTasks) => {
+    const userCompletedTasks = filterTasksByMonth(user.completedTasks);
+    const totalHours = userCompletedTasks.reduce(
+      (sum, task) => sum + (task["SubTask.estimated_hours"] || 0),
+      0
+    );
+    const hourlyRate = getRateForExperienceLevel(user.work_experience_level);
+    const monthlyCommission = totalHours * hourlyRate;
+    return {
+      ...user,
+      completedTasks: userCompletedTasks,
+      totalHours,
+      hourlyRate,
+      monthlyCommission,
+      taskCount: userCompletedTasks.length
+    };
+  });
+
+  // Filter users by search and status
+  const filteredUsers = usersWithStats
+    .filter(user => {
+      const matchesSearch = searchQuery === "" ||
+        user.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = selectedStatus === "all" || user.role === selectedStatus;
+      return matchesSearch && matchesStatus && user.completedTasks.length > 0;
+    })
+    .sort((a, b) => b.monthlyCommission - a.monthlyCommission);
+
+  const totalCommission = filteredUsers.reduce(
+    (sum, user) => sum + user.monthlyCommission,
+    0
+>>>>>>> parent of 1e2a220 (v0.01)
   );
 
   const handleDownload = () => {
