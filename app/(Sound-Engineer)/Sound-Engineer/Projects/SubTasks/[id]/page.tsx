@@ -218,200 +218,265 @@ export default function Page() {
           Add Subtask
         </button>
       </div>
+
+      {/* Summary Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-gray-900">{subtasks.length}</div>
+          <div className="text-sm text-gray-600">Total Subtasks</div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-purple-600">
+            {new Set([
+              ...subtasks.map(task => task.assignee_name).filter(Boolean),
+              ...subtasks.map(task => task.assignedTo_name).filter(Boolean)
+            ]).size}
+          </div>
+          <div className="text-sm text-gray-600">Total People</div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-green-600">
+            {subtasks.filter(task => task.status === "Completed").length}
+          </div>
+          <div className="text-sm text-gray-600">Completed</div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-blue-600">
+            {subtasks.filter(task => task.status === "In Progress").length}
+          </div>
+          <div className="text-sm text-gray-600">In Progress</div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-yellow-600">
+            {subtasks.filter(task => task.status === "To Do").length}
+          </div>
+          <div className="text-sm text-gray-600">To Do</div>
+        </div>
+      </div>
+
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr className="border-b">
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Title
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Description
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Priority
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Deadline
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actual Time
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Spent Time
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Assignee
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Assigned To
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {subtasks.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="px-6 py-10 text-center">
-                  <div className="flex flex-col items-center justify-center">
-                    <FiCheckCircle className="w-12 h-12 text-gray-300 mb-3" />
-                    <h3 className="text-lg font-medium text-gray-600 mb-1">
-                      No subtasks found
-                    </h3>
-                    <p className="text-gray-500 mb-4">
-                      Add subtasks to help organize your work
-                    </p>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr className="border-b">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Assignee
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Title
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Deadline
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actual Time
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Spent Time
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Priority
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Assigned To
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
-            ) : (
-              subtasks.map((subtask, idx) => (
-                <tr key={idx}>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    {subtask.title}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    {subtask.description}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-3 py-1 inline-flex text-xs leading-5 font-medium rounded-full ${getStatusColor(
-                        subtask.status
-                      )}`}
-                    >
-                      {subtask.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    {subtask.priority}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    {formatDate(subtask.deadline)}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    {subtask.estimated_hours}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    {subtask.time_spent}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    {subtask.assignee_name}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    {subtask.assignedTo_name}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-right">
-                    <button
-                      className="text-blue-600 hover:text-blue-800"
-                      onClick={() => handleEditClick(idx)}
-                    >
-                      <FiEdit size={16} /> Edit
-                    </button>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {subtasks.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-6 py-10 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <FiCheckCircle className="w-12 h-12 text-gray-300 mb-3" />
+                      <h3 className="text-lg font-medium text-gray-600 mb-1">
+                        No subtasks found
+                      </h3>
+                      <p className="text-gray-500 mb-4">
+                        Add subtasks to help organize your work
+                      </p>
+                    </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                subtasks.map((subtask, idx) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {subtask.assignee_name}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {subtask.title}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {formatDate(subtask.deadline)}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {subtask.estimated_hours}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {subtask.time_spent}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {subtask.priority}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-3 py-1 inline-flex text-xs leading-5 font-medium rounded-full ${getStatusColor(
+                          subtask.status
+                        )}`}
+                      >
+                        {subtask.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {subtask.assignedTo_name}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-right">
+                      <button
+                        className="text-blue-600 hover:text-blue-800"
+                        onClick={() => handleEditClick(idx)}
+                      >
+                        <FiEdit size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
       {editingIndex !== null && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
-          <div className="bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-md mx-4 p-6">
-            <h3 className="text-lg font-semibold mb-4">Edit Subtask</h3>
-            <div className="space-y-4">
-              <input
-                type="text"
-                className="w-full p-2 border rounded"
-                placeholder="Title"
-                value={editFields.title || ""}
-                onChange={(e) =>
-                  setEditFields((f) => ({ ...f, title: e.target.value }))
-                }
-              />
-              <textarea
-                className="w-full p-2 border rounded"
-                placeholder="Description"
-                value={editFields.description || ""}
-                onChange={(e) =>
-                  setEditFields((f) => ({ ...f, description: e.target.value }))
-                }
-              />
-              <select
-                className="w-full p-2 border rounded"
-                value={editFields.status || ""}
-                onChange={(e) =>
-                  setEditFields((f) => ({ ...f, status: e.target.value }))
-                }
-              >
-                <option value="To Do">To Do</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Review">Review</option>
-                <option value="Completed">Completed</option>
-              </select>
-              <select
-                className="w-full p-2 border rounded"
-                value={editFields.priority || ""}
-                onChange={(e) =>
-                  setEditFields((f) => ({ ...f, priority: e.target.value }))
-                }
-              >
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-                <option value="Critical">Critical</option>
-              </select>
-              <input
-                type="datetime-local"
-                className="w-full p-2 border rounded"
-                value={
-                  editFields.deadline
-                    ? new Date(editFields.deadline).toISOString().slice(0, 16)
-                    : ""
-                }
-                onChange={(e) =>
-                  setEditFields((f) => ({ ...f, deadline: e.target.value }))
-                }
-              />
-              <input
-                type="number"
-                className="w-full p-2 border rounded"
-                placeholder="Actual Time"
-                value={editFields.estimated_hours ?? ""}
-                onChange={(e) =>
-                  setEditFields((f) => ({
-                    ...f,
-                    estimated_hours: Number(e.target.value),
-                  }))
-                }
-              />
-              <input
-                type="number"
-                className="w-full p-2 border rounded"
-                placeholder="Spent Time"
-                value={editFields.time_spent ?? ""}
-                onChange={(e) =>
-                  setEditFields((f) => ({
-                    ...f,
-                    time_spent: Number(e.target.value),
-                  }))
-                }
-              />
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30 p-4">
+          <div className="bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4 p-8">
+            <h3 className="text-2xl font-semibold mb-6">Edit Subtask</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                <input
+                  type="text"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  placeholder="Enter subtask title"
+                  value={editFields.title || ""}
+                  onChange={(e) =>
+                    setEditFields((f) => ({ ...f, title: e.target.value }))
+                  }
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  placeholder="Enter subtask description"
+                  rows={3}
+                  value={editFields.description || ""}
+                  onChange={(e) =>
+                    setEditFields((f) => ({ ...f, description: e.target.value }))
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  value={editFields.status || ""}
+                  onChange={(e) =>
+                    setEditFields((f) => ({ ...f, status: e.target.value }))
+                  }
+                >
+                  <option value="To Do">To Do</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Review">Review</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                <select
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  value={editFields.priority || ""}
+                  onChange={(e) =>
+                    setEditFields((f) => ({ ...f, priority: e.target.value }))
+                  }
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Deadline</label>
+                <input
+                  type="datetime-local"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  value={
+                    editFields.deadline
+                      ? new Date(editFields.deadline).toISOString().slice(0, 16)
+                      : ""
+                  }
+                  onChange={(e) =>
+                    setEditFields((f) => ({ ...f, deadline: e.target.value }))
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Hours</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  placeholder="Enter estimated hours"
+                  value={editFields.estimated_hours ?? ""}
+                  onChange={(e) =>
+                    setEditFields((f) => ({
+                      ...f,
+                      estimated_hours: Number(e.target.value),
+                    }))
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Time Spent</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  placeholder="Enter time spent"
+                  value={editFields.time_spent ?? ""}
+                  onChange={(e) =>
+                    setEditFields((f) => ({
+                      ...f,
+                      time_spent: Number(e.target.value),
+                    }))
+                  }
+                />
+              </div>
             </div>
-            <div className="flex justify-end gap-2 mt-6">
+
+            <div className="flex justify-end gap-4 mt-8">
               <button
-                className="px-4 py-2 rounded bg-gray-200"
+                className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
                 onClick={() => setEditingIndex(null)}
                 disabled={isSaving}
               >
                 Cancel
               </button>
               <button
-                className="px-4 py-2 rounded bg-[#ff4e00] text-white"
+                className="px-6 py-3 bg-[#ff4e00] text-white rounded-lg hover:bg-[#ff4e00]/90 transition-colors"
                 onClick={handleSave}
                 disabled={isSaving}
               >
@@ -424,113 +489,151 @@ export default function Page() {
 
       {/* Add Subtask Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Add Subtask</h2>
-            <input
-              type="text"
-              placeholder="Title"
-              className="w-full p-2 border rounded mb-3"
-              value={newSubtask.title || ""}
-              onChange={(e) =>
-                setNewSubtask((prev) => ({ ...prev, title: e.target.value }))
-              }
-            />
-            <textarea
-              placeholder="Description"
-              className="w-full p-2 border rounded mb-3"
-              value={newSubtask.description || ""}
-              onChange={(e) =>
-                setNewSubtask((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-            />
-            <select
-              className="w-full p-2 border rounded mb-3"
-              value={newSubtask.status || "To Do"}
-              onChange={(e) =>
-                setNewSubtask((prev) => ({ ...prev, status: e.target.value }))
-              }
-            >
-              <option value="To Do">To Do</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Review">Review</option>
-              <option value="Completed">Completed</option>
-            </select>
-            <select
-              className="w-full p-2 border rounded mb-3"
-              value={newSubtask.priority || "Medium"}
-              onChange={(e) =>
-                setNewSubtask((prev) => ({ ...prev, priority: e.target.value }))
-              }
-            >
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-              <option value="Critical">Critical</option>
-            </select>
-            {usersLoading ? (
-              <p>Loading users...</p>
-            ) : (
-              <select
-                className="w-full p-2 border rounded mb-3"
-                onChange={(e) => handleAssignedToChange(e.target.value)}
-                value={
-                  users.find((u: User) => u.employee_id === newSubtask.assignedTo_empId)?.id || ""
-                } // Set selected value based on assignedTo_empId
-              >
-                <option value="">Select Assigned To</option>
-                {users.map((u: User) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
-            )}
-            <input
-              type="datetime-local"
-              className="w-full p-2 border rounded mb-3"
-              value={newSubtask.deadline || ""}
-              onChange={(e) =>
-                setNewSubtask((prev) => ({
-                  ...prev,
-                  deadline: e.target.value,
-                }))
-              }
-            />
-            <input
-              type="number"
-              placeholder="Estimated Hours"
-              className="w-full p-2 border rounded mb-3"
-              value={newSubtask.estimated_hours ?? ""}
-              onChange={(e) =>
-                setNewSubtask((prev) => ({
-                  ...prev,
-                  estimated_hours: Number(e.target.value),
-                }))
-              }
-            />
-            <input
-              type="number"
-              placeholder="Time Spent"
-              className="w-full p-2 border rounded mb-3"
-              value={newSubtask.time_spent ?? ""}
-              onChange={(e) =>
-                setNewSubtask((prev) => ({
-                  ...prev,
-                  time_spent: Number(e.target.value),
-                }))
-              }
-            />
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-6">Add Subtask</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                <input
+                  type="text"
+                  placeholder="Enter subtask title"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  value={newSubtask.title || ""}
+                  onChange={(e) =>
+                    setNewSubtask((prev) => ({ ...prev, title: e.target.value }))
+                  }
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea
+                  placeholder="Enter subtask description"
+                  rows={3}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  value={newSubtask.description || ""}
+                  onChange={(e) =>
+                    setNewSubtask((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                />
+              </div>
 
-            <div className="flex justify-end gap-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  value={newSubtask.status || "To Do"}
+                  onChange={(e) =>
+                    setNewSubtask((prev) => ({ ...prev, status: e.target.value }))
+                  }
+                >
+                  <option value="To Do">To Do</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Review">Review</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                <select
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  value={newSubtask.priority || "Medium"}
+                  onChange={(e) =>
+                    setNewSubtask((prev) => ({ ...prev, priority: e.target.value }))
+                  }
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
+                </select>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Assigned To</label>
+                {usersLoading ? (
+                  <p className="text-gray-500">Loading users...</p>
+                ) : (
+                  <select
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                    onChange={(e) => handleAssignedToChange(e.target.value)}
+                    value={
+                      users.find((u: User) => u.employee_id === newSubtask.assignedTo_empId)?.id || ""
+                    }
+                  >
+                    <option value="">Select Assigned To</option>
+                    {users.map((u: User) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Deadline</label>
+                <input
+                  type="datetime-local"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  value={newSubtask.deadline || ""}
+                  onChange={(e) =>
+                    setNewSubtask((prev) => ({
+                      ...prev,
+                      deadline: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Hours</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0.01"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  value={newSubtask.estimated_hours ?? ""}
+                  onChange={(e) =>
+                    setNewSubtask((prev) => ({
+                      ...prev,
+                      estimated_hours: Number(e.target.value),
+                    }))
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Time Spent</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0.01"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
+                  value={newSubtask.time_spent ?? ""}
+                  onChange={(e) =>
+                    setNewSubtask((prev) => ({
+                      ...prev,
+                      time_spent: Number(e.target.value),
+                    }))
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-4 mt-8">
               <button
-                className="px-4 py-2 bg-gray-300 rounded"
+                className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
                 onClick={() => {
                   setIsAddModalOpen(false);
-                  setNewSubtask({ // Reset new subtask state when closing the modal
+                  setNewSubtask({
                     status: "To Do",
                     priority: "Medium",
                     estimated_hours: 0,
@@ -541,7 +644,7 @@ export default function Page() {
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-[#ff4e00] text-white rounded"
+                className="px-6 py-3 bg-[#ff4e00] text-white rounded-lg hover:bg-[#ff4e00]/90 transition-colors"
                 onClick={handleCreateSubtask}
               >
                 Create
