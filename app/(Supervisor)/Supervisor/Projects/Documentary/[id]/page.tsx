@@ -221,7 +221,6 @@ export default function EditProjectPage() {
   };
 
 
-
   if (!project) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">

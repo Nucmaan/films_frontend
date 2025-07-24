@@ -340,12 +340,12 @@ export default function ProjectsPage() {
 
   // Update the handleViewProject function to navigate to the project detail page
   const handleViewProject = (projectId: number) => {
-    router.push(`/Admin/Projects/${projectId}`);
+    router.push(`/Sound-Engineer/Projects/${projectId}`);
   };
 
   // Add a new function to handle edit navigation
   const handleEditProject = (projectId: number) => {
-    router.push(`/Admin/Projects/Documentary/${projectId}`);
+    router.push(`/Sound-Engineer/Projects/Documentary/${projectId}`);
   };
 
   // Handle deleting a project

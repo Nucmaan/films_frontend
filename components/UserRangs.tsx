@@ -33,6 +33,7 @@ import { useUserLeaderboardStats } from "@/lib/analytics/page.js";
 
 interface LeaderboardUser {
   id: number;
+  employee_id: string;
   name: string;
   profile_image: string;
   role: string;
@@ -386,7 +387,7 @@ export default function UserRangs() {
                                       </span>
                                     )}
                                   </div>
-                                  <div className="text-xs text-gray-500">User #{user.id}</div>
+                                  <div className="text-xs text-gray-500">User #{user.employee_id}</div>
                                 </div>
                               </div>
                             </TableCell>
@@ -421,7 +422,7 @@ export default function UserRangs() {
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Link href={`/Admin/Reports-Analytics/${user.id}`}>
+                              <Link href={`/Admin`}>
                                 <button 
                                   className="inline-flex items-center cursor-pointer gap-1.5 px-4 py-2 text-sm rounded-lg border border-blue-200 text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors shadow-sm hover:shadow"
                                 >

@@ -6,10 +6,10 @@ import { FiCheckCircle, FiClock, FiAlertCircle, FiCalendar } from 'react-icons/f
 import { useUserTaskStats } from "@/lib/allInOne/page.js";
 import VoiceOverArtistDashboardSkeleton from "@/components/VoiceOverArtistDashboardSkeleton";
 
-export default function EditorPage() {
+export default function EditorPage() { 
   const user = userAuth((state) => state.user);
   const taskUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
-  const { stats, isLoading, error } = useUserTaskStats(taskUrl, user?.id);
+  const { stats, isLoading, error } = useUserTaskStats(taskUrl, user?.employee_id);
 
   if (isLoading) {
     return <VoiceOverArtistDashboardSkeleton />;
@@ -56,7 +56,7 @@ export default function EditorPage() {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-sm font-medium text-gray-500">Total Tasks</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
+                <p className="text-2xl font-semibold text-gray-900">{(stats["Completed"] ?? 0) + (stats["To Do"] ?? 0) + (stats["In Progress"] ?? 0) + (stats["Review"] ?? 0)}</p>
               </div>
               <div className="p-2 bg-blue-50 rounded-lg">
                 <FiCheckCircle className="h-5 w-5 text-blue-600" />
@@ -69,7 +69,7 @@ export default function EditorPage() {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-sm font-medium text-gray-500">Completed</p>
-                <p className="text-2xl font-semibold text-green-600">{stats.completed}</p>
+                <p className="text-2xl font-semibold text-green-600">{stats["Completed"] ?? 0}</p>
               </div>
               <div className="p-2 bg-green-50 rounded-lg">
                 <FiCheckCircle className="h-5 w-5 text-green-600" />
@@ -82,7 +82,7 @@ export default function EditorPage() {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-sm font-medium text-gray-500">In Progress</p>
-                <p className="text-2xl font-semibold text-[#ff4e00]">{stats.inProgress}</p>
+                <p className="text-2xl font-semibold text-[#ff4e00]">{stats["In Progress"] ?? 0}</p>
               </div>
               <div className="p-2 bg-[#ff4e00]/10 rounded-lg">
                 <FiClock className="h-5 w-5 text-[#ff4e00]" />
@@ -95,7 +95,7 @@ export default function EditorPage() {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-sm font-medium text-gray-500">To Do</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.toDo}</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats["To Do"] ?? 0}</p>
               </div>
               <div className="p-2 bg-gray-50 rounded-lg">
                 <FiCalendar className="h-5 w-5 text-gray-600" />
@@ -107,14 +107,14 @@ export default function EditorPage() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <p className="text-sm font-medium text-gray-500">Overdue</p>
-                <p className="text-2xl font-semibold text-red-600">{stats.overdue}</p>
+                <p className="text-sm font-medium text-gray-500">Review</p>
+                <p className="text-2xl font-semibold text-blue-600">{stats["Review"] ?? 0}</p>
               </div>
-              <div className="p-2 bg-red-50 rounded-lg">
-                <FiAlertCircle className="h-5 w-5 text-red-600" />
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <FiCheckCircle className="h-5 w-5 text-blue-600" />
               </div>
             </div>
-            <p className="text-xs text-gray-500">Past deadline</p>
+            <p className="text-xs text-gray-500">Tasks in review</p>
           </div>
         </div>
       </div>

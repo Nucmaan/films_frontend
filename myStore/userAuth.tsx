@@ -7,6 +7,7 @@ interface User {
   email: string;
   mobile: string;
   employee_id : string,
+  expLevel : string;
   role: string;
   profile_image: string;
   isverified: boolean;

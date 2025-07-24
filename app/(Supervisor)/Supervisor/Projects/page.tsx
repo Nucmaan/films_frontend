@@ -26,8 +26,7 @@ export default function DubingStatus() {
 
   useEffect(() => {
     if (details) {
-      // Only show DRAMA, Movie, and Documentary
-      const projectTypes = [
+       const projectTypes = [
         { 
           type: "DRAMA", 
           color: "text-[#ff4e00]", 
@@ -94,14 +93,12 @@ export default function DubingStatus() {
     return (
       <div className="p-8 bg-gray-50 min-h-screen">
         <div className="max-w-7xl mx-auto">
-          {/* Skeleton for header */}
-          <div className="mb-12 text-center animate-pulse">
+           <div className="mb-12 text-center animate-pulse">
             <div className="h-10 w-80 bg-gray-200 rounded mx-auto mb-3" />
             <div className="h-1 w-20 bg-[#ff4e00] mx-auto mb-4" />
             <div className="h-4 w-96 bg-gray-100 rounded mx-auto" />
           </div>
-          {/* Skeleton for project cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[...Array(3)].map((_, idx) => (
               <div key={idx} className="bg-white rounded-2xl shadow-sm overflow-hidden animate-pulse">
                 <div className="px-7 pt-6 pb-6">
