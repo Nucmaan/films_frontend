@@ -370,7 +370,7 @@ export default function Page() {
                         className="text-blue-600 hover:text-blue-800"
                         onClick={() => handleEditClick(idx)}
                       >
-                        <FiEdit size={16} /> Edit
+                        <FiEdit size={16} />  
                       </button>
                     </td>
                   </tr>
@@ -460,13 +460,13 @@ export default function Page() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Hours</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Actual Hours</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0.01"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
-                  placeholder="Enter estimated hours"
+                  placeholder="Enter Actual hours"
                   value={editFields.estimated_hours ?? ""}
                   onChange={(e) =>
                     setEditFields((f) => ({
@@ -657,7 +657,7 @@ export default function Page() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Hours</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Actual Hours</label>
                 <input
                   type="number"
                   step="0.01"
