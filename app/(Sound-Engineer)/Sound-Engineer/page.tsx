@@ -6,7 +6,7 @@ import { FiCheckCircle, FiClock, FiAlertCircle, FiCalendar } from 'react-icons/f
 import { useUserTaskStats } from "@/lib/allInOne/page.js";
 import VoiceOverArtistDashboardSkeleton from "@/components/VoiceOverArtistDashboardSkeleton";
 
-export default function EditorPage() { 
+export default function SoundEngineerPage() { 
   const user = userAuth((state) => state.user);
   const taskUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
   const { stats, isLoading, error } = useUserTaskStats(taskUrl, user?.employee_id);
