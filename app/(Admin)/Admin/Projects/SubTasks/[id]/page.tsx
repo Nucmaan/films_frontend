@@ -1,8 +1,8 @@
 "use client";
 import { useParams } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import useSWR from "swr";
-import { FiEdit, FiCheckCircle } from "react-icons/fi";
+import { FiEdit, FiCheckCircle, FiChevronDown, FiChevronRight } from "react-icons/fi";
 import userAuth from "@/myStore/userAuth";
 import { useUsers } from "@/service/Authentication.js";
 
@@ -66,12 +66,31 @@ export default function Page() {
   const { users, isLoading: usersLoading } = useUsers();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const [expandedRoles, setExpandedRoles] = useState<Set<string>>(new Set());
   const [newSubtask, setNewSubtask] = useState<Partial<Subtask>>({
     status: "To Do",
     priority: "Medium",
     estimated_hours: 0.01,
     time_spent: 0.01,
   });
+
+  // Group users by role
+  const usersByRole = useMemo(() => {
+    if (!users) return {};
+    
+    const grouped = users.reduce((acc: { [key: string]: User[] }, user: User) => {
+      const role = user.role || 'Unassigned';
+      if (!acc[role]) {
+        acc[role] = [];
+      }
+      acc[role].push(user);
+      return acc;
+    }, {});
+    
+    return grouped;
+  }, [users]);
 
   const handleCreateSubtask = async () => {
     if (!user) {
@@ -125,6 +144,8 @@ export default function Page() {
         estimated_hours: 0,
         time_spent: 0,
       }); // Reset form fields
+      setSelectedRole("");
+      setExpandedRoles(new Set());
       mutate(); // Refresh the list
     } catch (error) {
       console.error("Error creating subtask:", error);
@@ -142,17 +163,25 @@ export default function Page() {
   const [editFields, setEditFields] = useState<Partial<Subtask>>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleAssignedToChange = (userId: string) => {
-    const selectedUser = users.find((u: User) => u.id === Number(userId));
-    if (selectedUser) {
-      setNewSubtask((prev) => ({
-        ...prev,
-        assignedTo_name: selectedUser.name,
-        assignedTo_empId: selectedUser.employee_id,
-        assignedTo_expLevel: selectedUser.work_experience_level,
-        assignedTo_role: selectedUser.role,
-      }));
+  const handleAssignedToChange = (user: User) => {
+    setNewSubtask((prev) => ({
+      ...prev,
+      assignedTo_name: user.name,
+      assignedTo_empId: user.employee_id,
+      assignedTo_expLevel: user.work_experience_level,
+      assignedTo_role: user.role,
+    }));
+    setIsRoleDropdownOpen(false);
+  };
+
+  const toggleRoleExpansion = (role: string) => {
+    const newExpanded = new Set(expandedRoles);
+    if (newExpanded.has(role)) {
+      newExpanded.delete(role);
+    } else {
+      newExpanded.add(role);
     }
+    setExpandedRoles(newExpanded);
   };
 
 
@@ -341,7 +370,7 @@ export default function Page() {
                         className="text-blue-600 hover:text-blue-800"
                         onClick={() => handleEditClick(idx)}
                       >
-                        <FiEdit size={16} />
+                        <FiEdit size={16} /> Edit
                       </button>
                     </td>
                   </tr>
@@ -559,20 +588,56 @@ export default function Page() {
                 {usersLoading ? (
                   <p className="text-gray-500">Loading users...</p>
                 ) : (
-                  <select
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
-                    onChange={(e) => handleAssignedToChange(e.target.value)}
-                    value={
-                      users.find((u: User) => u.employee_id === newSubtask.assignedTo_empId)?.id || ""
-                    }
-                  >
-                    <option value="">Select Assigned To</option>
-                    {users.map((u: User) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent text-left flex justify-between items-center bg-white"
+                      onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+                    >
+                      <span className="text-gray-700">
+                        {newSubtask.assignedTo_name || "Select Assigned To"}
+                      </span>
+                      <FiChevronDown className={`transform transition-transform ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {isRoleDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {Object.entries(usersByRole).map(([role, roleUsers]) => {
+                          const users = roleUsers as User[];
+                          return (
+                            <div key={role}>
+                              <button
+                                type="button"
+                                className="w-full px-4 py-3 text-left hover:bg-gray-50 flex justify-between items-center border-b border-gray-100"
+                                onClick={() => toggleRoleExpansion(role)}
+                              >
+                                <div className="flex items-center gap-2">
+                                  {expandedRoles.has(role) ? <FiChevronDown size={16} /> : <FiChevronRight size={16} />}
+                                  <span className="font-medium text-gray-900">{role}</span>
+                                  <span className="text-sm text-gray-500">({users.length})</span>
+                                </div>
+                              </button>
+                              
+                              {expandedRoles.has(role) && (
+                                <div className="bg-gray-50">
+                                  {users.map((user: User) => (
+                                    <button
+                                      key={user.id}
+                                      type="button"
+                                      className="w-full px-8 py-2 text-left hover:bg-gray-100 text-gray-700 text-sm"
+                                      onClick={() => handleAssignedToChange(user)}
+                                    >
+                                      {user.name}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
