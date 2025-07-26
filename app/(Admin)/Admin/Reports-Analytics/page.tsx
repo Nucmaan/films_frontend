@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -33,25 +33,26 @@ import {
   Search,
   Users,
   BarChart2,
+  ExternalLink,
+  PieChart,
+  TrendingUp,
   ClipboardCheck,
   Download,
   DollarSign,
-  PieChart,
-  TrendingUp,
 } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function ReportsAnalyticsPage() {
-  const now = new Date();
-  const defaultYear = now.getFullYear().toString();
-  const defaultMonth = String(now.getMonth() + 1).padStart(2, "0");
+  const { data, error, isLoading } = useSWR(
+    `${API_BASE}/api/subtasks/stats/users-completed`,
+    fetcher
+  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("all");
-
-
 
   if (error) {
     return (
@@ -69,30 +70,42 @@ export default function ReportsAnalyticsPage() {
 
   const rows = Array.isArray(data) ? data : [];
 
-  // Filter data based on search query and selected role
-  const filteredRows = rows.filter(user => {
-    const matchesSearch = searchQuery === "" || 
+  const filteredRows = rows.filter((user) => {
+    const matchesSearch =
+      searchQuery === "" ||
       user.assignedTo_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.assignedTo_empId.toString().includes(searchQuery);
-    
-    const matchesRole = selectedRole === "all" || user.assignedTo_role === selectedRole;
-    
+
+    const matchesRole =
+      selectedRole === "all" || user.assignedTo_role === selectedRole;
+
     return matchesSearch && matchesRole;
   });
 
-  // Calculate stats
   const totalUsers = filteredRows.length;
-  const totalHours = filteredRows.reduce((sum, u) => sum + u.total_estimated_hours, 0);
-  const totalCommission = filteredRows.reduce((sum, u) => sum + (u.total_estimated_hours * 5), 0);
+  const totalHours = filteredRows.reduce(
+    (sum, u) => sum + u.total_estimated_hours,
+    0
+  );
+  const totalCommission = filteredRows.reduce(
+    (sum, u) => sum + u.total_estimated_hours * 5,
+    0
+  );
   const averageRate = totalUsers > 0 ? totalCommission / totalHours : 0;
 
-  // Get unique roles for filter
-  const uniqueRoles = [...new Set(rows.map(u => u.assignedTo_role))];
+  const uniqueRoles = [...new Set(rows.map((u) => u.assignedTo_role))];
 
-  // Function to handle downloading the data as CSV
   const handleDownload = () => {
-    const headers = ["Emp ID", "Name", "Exp Level", "Role", "Actual Hours", "Completed Count", "Commission ($)"];
-    
+    const headers = [
+      "Emp ID",
+      "Name",
+      "Exp Level",
+      "Role",
+      "Actual Hours",
+      "Completed Count",
+      "Commission ($)",
+    ];
+
     const csvData = filteredRows.map((user, index) => [
       user.assignedTo_empId,
       user.assignedTo_name,
@@ -100,9 +113,9 @@ export default function ReportsAnalyticsPage() {
       user.assignedTo_role,
       Number(user.total_estimated_hours).toFixed(2),
       user.completed_count,
-      (user.total_estimated_hours * 5).toFixed(2)
+      (user.total_estimated_hours * 5).toFixed(2),
     ]);
-    
+
     csvData.push([
       "TOTAL",
       "",
@@ -110,42 +123,30 @@ export default function ReportsAnalyticsPage() {
       "",
       totalHours.toFixed(2),
       "",
-      totalCommission.toFixed(2)
+      totalCommission.toFixed(2),
     ]);
-    
+
     const csvContent = [
       headers.join(","),
-      ...csvData.map(row => row.join(","))
+      ...csvData.map((row) => row.join(",")),
     ].join("\n");
-    
+
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    
+
     link.setAttribute("href", url);
-    link.setAttribute("download", `users_completed_tasks_${format(new Date(), "yyyy_MM_dd")}.csv`);
+    link.setAttribute(
+      "download",
+      `users_completed_tasks_${format(new Date(), "yyyy_MM_dd")}.csv`
+    );
+
     link.style.visibility = "hidden";
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
-
-
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-        <div className="container mx-auto px-6 py-8">
-          <div className="flex items-center justify-center min-h-96">
-            <div className="text-center">
-              <p className="text-red-600">Failed to load data</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -179,7 +180,6 @@ export default function ReportsAnalyticsPage() {
 
       <div className="container mx-auto px-6 py-8">
         <div className="flex flex-col gap-8">
-          {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all">
               <CardContent className="p-0">
@@ -224,7 +224,9 @@ export default function ReportsAnalyticsPage() {
                       <div className="text-3xl font-bold text-gray-900">
                         {totalHours.toFixed(1)}
                       </div>
-                      <div className="text-sm text-gray-500 mb-1">hours worked</div>
+                      <div className="text-sm text-gray-500 mb-1">
+                        hours worked
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -255,7 +257,7 @@ export default function ReportsAnalyticsPage() {
               </CardContent>
             </Card>
 
-          <Card className="border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all">
+            <Card className="border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all">
               <CardContent className="p-0">
                 <div className="flex items-stretch h-full">
                   <div className="w-2 bg-amber-500"></div>
@@ -272,7 +274,9 @@ export default function ReportsAnalyticsPage() {
                       <div className="text-3xl font-bold text-gray-900">
                         ${totalCommission.toFixed(2)}
                       </div>
-                      <div className="text-sm text-gray-500 mb-1">total earned</div>
+                      <div className="text-sm text-gray-500 mb-1">
+                        total earned
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -280,9 +284,7 @@ export default function ReportsAnalyticsPage() {
             </Card>
           </div>
 
-          {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-4">
-            {/* Search */}
             <Card className="flex-1 border border-gray-100 shadow-sm">
               <CardContent className="p-3">
                 <div className="relative">
@@ -296,8 +298,6 @@ export default function ReportsAnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Role Filter */}
             <Card className="border border-gray-100 shadow-sm">
               <CardContent className="p-3">
                 <Select value={selectedRole} onValueChange={setSelectedRole}>
@@ -305,46 +305,19 @@ export default function ReportsAnalyticsPage() {
                     <SelectValue placeholder="Filter by role" />
                   </SelectTrigger>
                   <SelectContent className="bg-white rounded-xl shadow-md p-2 border border-gray-100">
-                    <SelectItem value="all">All Roles</SelectItem>
+                    <SelectItem
+                      value="all"
+                      className="cursor-pointer py-3 px-6 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
+                      All Roles
+                    </SelectItem>
                     {uniqueRoles.map((role) => (
-                      <SelectItem key={role} value={role}>
+                      <SelectItem
+                        key={role}
+                        value={role}
+                        className="cursor-pointer py-3 px-6 rounded-lg hover:bg-blue-50 transition-colors"
+                      >
                         {role}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-
-            {/* Year Filter */}
-            <Card className="border border-gray-100 shadow-sm">
-              <CardContent className="p-3">
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-[140px] bg-transparent border-gray-200 rounded-xl h-12">
-                    <SelectValue placeholder="Year" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white rounded-xl shadow-md p-2 border border-gray-100">
-                    {years.map((y) => (
-                      <SelectItem key={y} value={y}>
-                        {y}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-
-            {/* Month Filter */}
-            <Card className="border border-gray-100 shadow-sm">
-              <CardContent className="p-3">
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="w-[180px] bg-transparent border-gray-200 rounded-xl h-12">
-                    <SelectValue placeholder="Month" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white rounded-xl shadow-md p-2 border border-gray-100">
-                    {months.map((m) => (
-                      <SelectItem key={m.value} value={m.value}>
-                        {m.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -353,7 +326,6 @@ export default function ReportsAnalyticsPage() {
             </Card>
           </div>
 
-          {/* Users Table */}
           <Card className="border border-gray-100 bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow transition-all">
             <CardHeader className="border-b border-gray-100 py-5 px-6">
               <div className="flex items-center justify-between">
@@ -429,7 +401,7 @@ export default function ReportsAnalyticsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredRows.map((user) => {
+                      {filteredRows.map((user, index) => {
                         const commission = (
                           user.total_estimated_hours * 5
                         ).toFixed(2);
@@ -483,10 +455,8 @@ export default function ReportsAnalyticsPage() {
             </CardContent>
             <CardFooter className="bg-gray-50 py-3 px-6 text-xs text-gray-500">
               <div className="flex items-center gap-2">
-                <DollarSign className="h-3 w-3" />
-                <span>
-                  * Commission calculated at $5 per hour based on estimated hours
-                </span>
+                <DollarSign className="h-3.5 w-3.5" />
+                <span>Commission calculated at $5.00 per hour worked</span>
               </div>
             </CardFooter>
           </Card>
