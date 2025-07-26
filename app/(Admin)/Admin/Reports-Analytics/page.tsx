@@ -54,20 +54,7 @@ export default function ReportsAnalyticsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("all");
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-        <div className="container mx-auto px-6 py-8">
-          <div className="flex items-center justify-center min-h-96">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff4e00] mx-auto mb-4"></div>
-              <p className="text-gray-500">Loading...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   if (error) {
     return (
