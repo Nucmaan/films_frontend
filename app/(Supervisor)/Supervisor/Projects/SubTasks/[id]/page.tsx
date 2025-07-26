@@ -2,7 +2,7 @@
 import { useParams } from "next/navigation";
 import React, { useState, useMemo } from "react";
 import useSWR from "swr";
-import { FiEdit, FiCheckCircle, FiChevronDown, FiChevronRight } from "react-icons/fi";
+import { FiEdit, FiCheckCircle, FiChevronDown, FiChevronRight, FiTrash2 } from "react-icons/fi"; // Import FiTrash2 icon
 import userAuth from "@/myStore/userAuth";
 import { useUsers } from "@/service/Authentication.js";
 
@@ -79,7 +79,7 @@ export default function Page() {
   // Group users by role
   const usersByRole = useMemo(() => {
     if (!users) return {};
-    
+
     const grouped = users.reduce((acc: { [key: string]: User[] }, user: User) => {
       const role = user.role || 'Unassigned';
       if (!acc[role]) {
@@ -88,7 +88,7 @@ export default function Page() {
       acc[role].push(user);
       return acc;
     }, {});
-    
+
     return grouped;
   }, [users]);
 
@@ -184,7 +184,6 @@ export default function Page() {
     setExpandedRoles(newExpanded);
   };
 
-
   const handleEditClick = (idx: number) => {
     setEditingIndex(idx);
     setEditFields({ ...subtasks[idx] });
@@ -227,6 +226,30 @@ export default function Page() {
       console.error("Error saving subtask:", e);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteSubtask = async (subtaskId: number) => {
+    if (window.confirm("Are you sure you want to delete this subtask?")) {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_TASK_SERVICE_URL}/api/subtasks/${subtaskId}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Failed to delete subtask");
+        }
+
+        console.log("Subtask deleted successfully");
+        mutate(); // Refresh the list after deletion
+      } catch (error) {
+        console.error("Error deleting subtask:", error);
+        // Optionally show an error notification to the user
+      }
     }
   };
 
@@ -365,12 +388,18 @@ export default function Page() {
                     <td className="px-4 py-4 whitespace-nowrap">
                       {subtask.assignedTo_name}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-right">
+                    <td className="px-4 py-4 whitespace-nowrap text-right flex items-center gap-2"> {/* Added flex and gap for icons */}
                       <button
                         className="text-blue-600 hover:text-blue-800"
                         onClick={() => handleEditClick(idx)}
                       >
-                        <FiEdit size={16} />  
+                        <FiEdit size={16} />
+                      </button>
+                      <button
+                        className="text-red-600 hover:text-red-800"
+                        onClick={() => handleDeleteSubtask(subtask.id)} // Delete button
+                      >
+                        <FiTrash2 size={16} />
                       </button>
                     </td>
                   </tr>
@@ -534,7 +563,7 @@ export default function Page() {
                   }
                 />
               </div>
-              
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
@@ -599,7 +628,7 @@ export default function Page() {
                       </span>
                       <FiChevronDown className={`transform transition-transform ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
-                    
+
                     {isRoleDropdownOpen && (
                       <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                         {Object.entries(usersByRole).map(([role, roleUsers]) => {
@@ -617,7 +646,7 @@ export default function Page() {
                                   <span className="text-sm text-gray-500">({users.length})</span>
                                 </div>
                               </button>
-                              
+
                               {expandedRoles.has(role) && (
                                 <div className="bg-gray-50">
                                   {users.map((user: User) => (

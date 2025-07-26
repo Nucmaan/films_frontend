@@ -51,98 +51,58 @@ export default function ReportsAnalyticsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("all");
 
-  // NEW: separate year & month selects
-  const [selectedYear, setSelectedYear] = useState<string>(defaultYear);
-  const [selectedMonth, setSelectedMonth] = useState<string>(defaultMonth);
 
-  // Build API URL with month filter (always send YYYY-MM using the two selects)
-  const monthParam = `${selectedYear}-${selectedMonth}`;
-  const apiUrl = `${API_BASE}/api/subtasks/stats/users-completed?month=${monthParam}`;
 
-  const { data, error, isLoading } = useSWR(apiUrl, fetcher);
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <div className="container mx-auto px-6 py-8">
+          <div className="flex items-center justify-center min-h-96">
+            <div className="text-center">
+              <p className="text-red-600">Failed to load data</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  // If backend returns { message: "No users..." }, convert to []
-  const rows =
-    data && typeof data === "object" && !Array.isArray(data)
-      ? []
-      : Array.isArray(data)
-      ? data
-      : [];
-
-  // Years list (current year down to 4 years back)
-  const years = useMemo(() => {
-    const current = new Date().getFullYear();
-    return Array.from({ length: 5 }, (_, i) => (current - i).toString());
-  }, []);
-
-  // Months list
-  const months = useMemo(
-    () => [
-      { value: "01", label: "January" },
-      { value: "02", label: "February" },
-      { value: "03", label: "March" },
-      { value: "04", label: "April" },
-      { value: "05", label: "May" },
-      { value: "06", label: "June" },
-      { value: "07", label: "July" },
-      { value: "08", label: "August" },
-      { value: "09", label: "September" },
-      { value: "10", label: "October" },
-      { value: "11", label: "November" },
-      { value: "12", label: "December" },
-    ],
-    []
-  );
+  const rows = Array.isArray(data) ? data : [];
 
   // Filter data based on search query and selected role
-  const filteredRows = rows.filter((user) => {
-    const matchesSearch =
-      searchQuery === "" ||
+  const filteredRows = rows.filter(user => {
+    const matchesSearch = searchQuery === "" || 
       user.assignedTo_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.assignedTo_empId.toString().includes(searchQuery);
-
+    
     const matchesRole = selectedRole === "all" || user.assignedTo_role === selectedRole;
-
+    
     return matchesSearch && matchesRole;
   });
 
   // Calculate stats
   const totalUsers = filteredRows.length;
-  const totalHours = filteredRows.reduce(
-    (sum, u) => sum + u.total_estimated_hours,
-    0
-  );
-  const totalCommission = filteredRows.reduce(
-    (sum, u) => sum + u.total_estimated_hours * 5,
-    0
-  );
+  const totalHours = filteredRows.reduce((sum, u) => sum + u.total_estimated_hours, 0);
+  const totalCommission = filteredRows.reduce((sum, u) => sum + (u.total_estimated_hours * 5), 0);
   const averageRate = totalUsers > 0 ? totalCommission / totalHours : 0;
 
   // Get unique roles for filter
-  const uniqueRoles = [...new Set(rows.map((u) => u.assignedTo_role))];
+  const uniqueRoles = [...new Set(rows.map(u => u.assignedTo_role))];
 
-  // CSV download
+  // Function to handle downloading the data as CSV
   const handleDownload = () => {
-    const headers = [
-      "Emp ID",
-      "Name",
-      "Exp Level",
-      "Role",
-      "Actual Hours",
-      "Completed Count",
-      "Commission ($)",
-    ];
-
-    const csvData = filteredRows.map((user) => [
+    const headers = ["Emp ID", "Name", "Exp Level", "Role", "Actual Hours", "Completed Count", "Commission ($)"];
+    
+    const csvData = filteredRows.map((user, index) => [
       user.assignedTo_empId,
       user.assignedTo_name,
       user.assignedTo_expLevel,
       user.assignedTo_role,
       Number(user.total_estimated_hours).toFixed(2),
       user.completed_count,
-      (user.total_estimated_hours * 5).toFixed(2),
+      (user.total_estimated_hours * 5).toFixed(2)
     ]);
-
+    
     csvData.push([
       "TOTAL",
       "",
@@ -150,44 +110,28 @@ export default function ReportsAnalyticsPage() {
       "",
       totalHours.toFixed(2),
       "",
-      totalCommission.toFixed(2),
+      totalCommission.toFixed(2)
     ]);
-
+    
     const csvContent = [
       headers.join(","),
-      ...csvData.map((row) => row.join(",")),
+      ...csvData.map(row => row.join(","))
     ].join("\n");
-
+    
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-
+    
     link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `users_completed_tasks_${format(new Date(), "yyyy_MM_dd")}.csv`
-    );
+    link.setAttribute("download", `users_completed_tasks_${format(new Date(), "yyyy_MM_dd")}.csv`);
     link.style.visibility = "hidden";
-
+    
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-        <div className="container mx-auto px-6 py-8">
-          <div className="flex items-center justify-center min-h-96">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff4e00] mx-auto mb-4"></div>
-              <p className="text-gray-500">Loading...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   if (error) {
     return (
