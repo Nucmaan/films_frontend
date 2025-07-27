@@ -75,6 +75,7 @@ export default function Page() {
     estimated_hours: 0.01,
     time_spent: 0.01,
   });
+  const [isCreating, setIsCreating] = useState(false);
 
   // Group users by role
   const usersByRole = useMemo(() => {
@@ -98,7 +99,7 @@ export default function Page() {
       // Optionally show a notification to the user
       return;
     }
-
+    setIsCreating(true);
     const payload = {
       task_id: taskId,
       title: newSubtask.title,
@@ -138,6 +139,7 @@ export default function Page() {
       const data = await res.json();
       console.log("Subtask created successfully:", data);
       setIsAddModalOpen(false);
+      console.log("Modal closed");
       setNewSubtask({
         status: "To Do",
         priority: "Medium",
@@ -146,10 +148,13 @@ export default function Page() {
       }); // Reset form fields
       setSelectedRole("");
       setExpandedRoles(new Set());
-      mutate(); // Refresh the list
+      await mutate(undefined, true); // Force revalidation from server
+      console.log("SWR mutate called and list refreshed");
     } catch (error) {
       console.error("Error creating subtask:", error);
       // Optionally show an error notification to the user
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -734,14 +739,16 @@ export default function Page() {
                     time_spent: 0,
                   });
                 }}
+                disabled={isCreating}
               >
                 Cancel
               </button>
               <button
                 className="px-6 py-3 bg-[#ff4e00] text-white rounded-lg hover:bg-[#ff4e00]/90 transition-colors"
                 onClick={handleCreateSubtask}
+                disabled={isCreating}
               >
-                Create
+                {isCreating ? "Creating..." : "Create"}
               </button>
             </div>
           </div>
