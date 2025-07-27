@@ -54,16 +54,31 @@ interface CompletedSubtask {
 const fetcher = (url: string): Promise<CompletedSubtask[]> =>
   fetch(url).then((res) => res.json());
 
-const CompletedSubtasks = () => {
-  const { data, error, isLoading } = useSWR<CompletedSubtask[]>(
-    `${process.env.NEXT_PUBLIC_TASK_SERVICE_URL}/api/subtasks/stats/admin/completed`,
-    fetcher
-  );
+const getMonthString = (date: Date) => format(date, "yyyy-MM");
 
+const CompletedSubtasks = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("all");
+  const [selectedMonth, setSelectedMonth] = useState("");
 
+  // Build API URL based on selectedMonth
+  const apiBase = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
+  const apiUrl = selectedMonth
+    ? `${apiBase}/api/subtasks/stats/admin/completed?month=${selectedMonth}`
+    : `${apiBase}/api/subtasks/stats/admin/completed`;
+  const { data, error, isLoading } = useSWR<CompletedSubtask[]>(apiUrl, fetcher);
 
+  // Ensure data is always an array
+  const users = Array.isArray(data) ? data : [];
+
+  // Get unique roles for filter
+  const uniqueRoles = [...new Set(users.map(u => u.assignee_role))];
+
+  // Calculate stats
+  const totalUsers = users.length;
+  const totalHours = users.reduce((sum, u) => sum + u.total_estimated_hours, 0);
+  const totalCompleted = users.reduce((sum, u) => sum + parseInt(u.completed_count), 0);
+  const totalCommission = totalHours * 5; // $5 per hour
 
   if (error) {
     return (
@@ -79,8 +94,6 @@ const CompletedSubtasks = () => {
     );
   }
 
-  const users = data || [];
-
   // Filter data based on search query and selected role
   const filteredUsers = users.filter(user => {
     const matchesSearch = searchQuery === "" || 
@@ -91,15 +104,6 @@ const CompletedSubtasks = () => {
     
     return matchesSearch && matchesRole;
   });
-
-  // Calculate stats
-  const totalUsers = filteredUsers.length;
-  const totalHours = filteredUsers.reduce((sum, u) => sum + u.total_estimated_hours, 0);
-  const totalCompleted = filteredUsers.reduce((sum, u) => sum + parseInt(u.completed_count), 0);
-  const totalCommission = totalHours * 5; // $5 per hour
-
-  // Get unique roles for filter
-  const uniqueRoles = [...new Set(users.map(u => u.assignee_role))];
 
   // Function to handle downloading the data as CSV
   const handleDownload = () => {
@@ -267,7 +271,7 @@ const CompletedSubtasks = () => {
               </CardContent>
             </Card>
             <Card className="border border-gray-100 shadow-sm">
-              <CardContent className="p-3">
+              <CardContent className="p-3 flex gap-2">
                 <Select value={selectedRole} onValueChange={setSelectedRole}>
                   <SelectTrigger className="w-[200px] bg-transparent border-gray-200 rounded-xl h-12">
                     <SelectValue placeholder="Filter by role" />
@@ -290,6 +294,14 @@ const CompletedSubtasks = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <Input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={e => setSelectedMonth(e.target.value)}
+                  className="w-[160px] bg-transparent border-gray-200 rounded-xl h-12 text-base focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  min="2020-01"
+                  max={getMonthString(new Date())}
+                />
               </CardContent>
             </Card>
           </div>
@@ -351,7 +363,7 @@ const CompletedSubtasks = () => {
                           <TableCell className="font-medium">{user.assignee_name}</TableCell>
                           <TableCell>{user.assignee_expLevel}</TableCell>
                           <TableCell>{user.assignee_role}</TableCell>
-                          <TableCell>{user.total_estimated_hours}</TableCell>
+                          <TableCell>{Number(user.total_estimated_hours).toFixed(2)}</TableCell>
                           <TableCell>{user.completed_count}</TableCell>
                           <TableCell className="text-right">
                             <Link href={`/Admin/Sound-End/${encodeURIComponent(user.assignee_empId)}`}>

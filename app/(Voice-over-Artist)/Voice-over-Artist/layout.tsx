@@ -83,7 +83,7 @@ export default function Voice0verArtistLayout({ children }: AdminLayoutProps) {
       setIsHydrated(true);
 
       if (user?.role !== "Voice-over Artist") {
-        router.push("/");
+        router.replace("/");
       }
     }
   }, [user, router]);

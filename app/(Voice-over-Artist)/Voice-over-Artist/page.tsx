@@ -6,7 +6,7 @@ import { FiCheckCircle, FiClock, FiAlertCircle, FiCalendar } from 'react-icons/f
 import { useUserTaskStats, useUserActiveAssignments } from "@/lib/allInOne/page.js";
 import VoiceOverArtistDashboardSkeleton from "@/components/VoiceOverArtistDashboardSkeleton";
 
-export default function VoiceOverArtistPage() { 
+export default function TranslatorPage() { 
   const user = userAuth((state) => state.user);
   const taskUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
   const { stats, isLoading: statsLoading, error: statsError } = useUserTaskStats(taskUrl, user?.employee_id);
@@ -26,6 +26,10 @@ export default function VoiceOverArtistPage() {
 
   // Filter recent tasks (limit to 10 most recent)
   const recentTasks = assignments ? assignments.slice(0, 10) : [];
+  
+  // Debug: log the data to see the structure
+  console.log('Assignments data:', assignments);
+  console.log('Recent tasks:', recentTasks);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -117,14 +121,14 @@ export default function VoiceOverArtistPage() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <p className="text-sm font-medium text-gray-500">Review</p>
-                <p className="text-2xl font-semibold text-blue-600">{stats["Review"] ?? 0}</p>
+                <p className="text-sm font-medium text-gray-500">Completed</p>
+                <p className="text-2xl font-semibold text-blue-600">{stats["Completed"] ?? 0}</p>
               </div>
               <div className="p-2 bg-blue-50 rounded-lg">
                 <FiCheckCircle className="h-5 w-5 text-blue-600" />
               </div>
             </div>
-            <p className="text-xs text-gray-500">Tasks in review</p>
+            <p className="text-xs text-gray-500">Tasks in Completed</p>
           </div>
         </div>
 

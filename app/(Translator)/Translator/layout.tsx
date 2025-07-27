@@ -83,7 +83,7 @@ export default function TranslatorLayout({ children }: AdminLayoutProps) {
       setIsHydrated(true);
 
       if (user?.role !== "Translator") {
-        router.push("/");
+        router.replace("/");
       }
     }
   }, [user, router]);

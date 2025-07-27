@@ -121,14 +121,14 @@ export default function TranslatorPage() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <p className="text-sm font-medium text-gray-500">Review</p>
-                <p className="text-2xl font-semibold text-blue-600">{stats["Review"] ?? 0}</p>
+                <p className="text-sm font-medium text-gray-500">Completed</p>
+                <p className="text-2xl font-semibold text-blue-600">{stats["Completed"] ?? 0}</p>
               </div>
               <div className="p-2 bg-blue-50 rounded-lg">
                 <FiCheckCircle className="h-5 w-5 text-blue-600" />
               </div>
             </div>
-            <p className="text-xs text-gray-500">Tasks in review</p>
+            <p className="text-xs text-gray-500">Tasks in Completed</p>
           </div>
         </div>
 

@@ -56,7 +56,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       setIsHydrated(true);
 
       if (user?.role !== "Admin") {
-        router.push("/");
+        router.replace("/");
       }
     }
   }, [user, router]);

@@ -84,7 +84,7 @@ export default function EditorLayout({ children }: AdminLayoutProps) {
       setIsHydrated(true);
 
       if (user?.role !== "Editor") {
-        router.push("/");
+        router.replace("/");
       }
     }
   }, [user, router]);

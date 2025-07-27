@@ -3,7 +3,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, startOfMonth } from "date-fns";
 import {
   Card,
   CardContent,
@@ -40,19 +40,22 @@ import {
   Download,
   DollarSign,
 } from "lucide-react";
+import { useEffect } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export default function ReportsAnalyticsPage() {
-  const { data, error, isLoading } = useSWR(
-    `${API_BASE}/api/subtasks/stats/users-completed`,
-    fetcher
-  );
+const getMonthString = (date: Date) => format(date, "yyyy-MM");
 
+export default function ReportsAnalyticsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("all");
+  const [selectedMonth, setSelectedMonth] = useState(() => getMonthString(new Date()));
+
+  // Build API URL with month param
+  const apiUrl = `${API_BASE}/api/subtasks/stats/users-completed?month=${selectedMonth}`;
+  const { data, error, isLoading } = useSWR(apiUrl, fetcher);
 
   if (error) {
     return (
@@ -299,7 +302,7 @@ export default function ReportsAnalyticsPage() {
               </CardContent>
             </Card>
             <Card className="border border-gray-100 shadow-sm">
-              <CardContent className="p-3">
+              <CardContent className="p-3 flex gap-2">
                 <Select value={selectedRole} onValueChange={setSelectedRole}>
                   <SelectTrigger className="w-[200px] bg-transparent border-gray-200 rounded-xl h-12">
                     <SelectValue placeholder="Filter by role" />
@@ -322,6 +325,14 @@ export default function ReportsAnalyticsPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                <Input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={e => setSelectedMonth(e.target.value)}
+                  className="w-[160px] bg-transparent border-gray-200 rounded-xl h-12 text-base focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  min="2020-01"
+                  max={getMonthString(new Date())}
+                />
               </CardContent>
             </Card>
           </div>

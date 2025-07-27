@@ -84,7 +84,7 @@ export default function SoundEngineerLayout({ children }: AdminLayoutProps) {
       setIsHydrated(true);
 
       if (user?.role !== "Sound Engineer") {
-        router.push("/");
+        router.replace("/");
       }
     }
   }, [user, router]);

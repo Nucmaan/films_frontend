@@ -7,7 +7,7 @@ import {
   FiCalendar,
   FiCheckCircle,
 } from "react-icons/fi";
-import UserRangs from "@/components/RangeSuperVisor";
+import TopThree from "@/components/TopThree";
 import {
   useUserDashboard,
   useProjectDashboard,
@@ -83,7 +83,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
-        <UserRangs /> 
+        <TopThree /> 
       </div>
     </div>
   );
