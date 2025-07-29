@@ -3,6 +3,7 @@
 import userAuth from '@/myStore/userAuth';
 import useSWR from 'swr';
 import React, { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   BiBell, BiCheck, BiCheckCircle, BiEnvelope, BiEnvelopeOpen,
   BiSearch, BiX
@@ -56,15 +57,58 @@ const fetcher = (url: string) =>
     return res.json();
   });
 
+const extractTaskId = (message: string): number | null => {
+  console.log('Extracting task ID from message:', message);
+  
+  // Pattern for "text - number)" - matches your notification format
+  const dashParenMatch = message.match(/-\s*(\d+)\)\s*$/);
+  if (dashParenMatch) {
+    console.log('Found task ID with dash-paren pattern:', dashParenMatch[1]);
+    return parseInt(dashParenMatch[1]);
+  }
+  
+  // Pattern for "text - number" (without closing parenthesis)
+  const dashMatch = message.match(/-\s*(\d+)\s*$/);
+  if (dashMatch) {
+    console.log('Found task ID with dash pattern:', dashMatch[1]);
+    return parseInt(dashMatch[1]);
+  }
+  
+  // Look for a number at the end of the message, typically in parentheses
+  const match = message.match(/\((\d+)\)\s*$/);
+  if (match) {
+    console.log('Found task ID with paren pattern:', match[1]);
+    return parseInt(match[1]);
+  }
+  
+  // Look for any number at the end of the message
+  const endMatch = message.match(/(\d+)\s*$/);
+  if (endMatch) {
+    console.log('Found task ID with end pattern:', endMatch[1]);
+    return parseInt(endMatch[1]);
+  }
+  
+  // Look for numbers in parentheses anywhere in the message
+  const parenMatch = message.match(/\((\d+)\)/);
+  if (parenMatch) {
+    console.log('Found task ID with any paren pattern:', parenMatch[1]);
+    return parseInt(parenMatch[1]);
+  }
+  
+  console.log('No task ID found in message');
+  return null;
+};
+
 export default function NotificationsPage() {
   const user = userAuth((state) => state.user);
+  const router = useRouter();
   const notificationService = process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL;
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [notificationsState, setNotificationsState] = useState<Notification[] | null>(null);
 
   const { data, error, isLoading } = useSWR(
-    user ? `${notificationService}/api/notifications/user/${user.id}` : null,
+    user ? `${notificationService}/api/notifications/user/${user?.employee_id}` : null,
     fetcher
   );
 
@@ -88,6 +132,26 @@ export default function NotificationsPage() {
 
   const markAllAsRead = () => {
     setNotificationsState(prev => prev?.map(item => ({ ...item, read: true })) || []);
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    const taskId = extractTaskId(notification.message);
+    console.log('Notification clicked:', notification.message);
+    console.log('Extracted task ID:', taskId);
+    
+    if (taskId) {
+      const path = `/Sound-Engineer/Projects/SubTasks/${taskId}`;
+      console.log('Navigating to:', path);
+      router.push(path);
+    } else {
+      console.log('No task ID found in message');
+    }
+  };
+
+  // Test function to verify navigation works
+  const testNavigation = () => {
+    console.log('Testing navigation to task 162');
+    router.push('/Sound-Engineer/Projects/SubTasks/162');
   };
 
   const filteredNotifications = notifications.filter((notification: Notification) => {
@@ -124,6 +188,7 @@ export default function NotificationsPage() {
         <div className="mb-6 sm:mb-8">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Notifications</h1>
           <p className="text-sm text-gray-500">Stay updated with all your important alerts and messages</p>
+        
         </div>
 
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
@@ -180,41 +245,65 @@ export default function NotificationsPage() {
             </div>
           ) : filteredNotifications.length > 0 ? (
             <div className="divide-y divide-gray-100">
-              {filteredNotifications.map((notification: Notification) => (
-                <div
-                  key={notification.id}
-                  className={`flex items-start gap-3 sm:gap-4 p-4 sm:p-5 transition-colors duration-200 hover:bg-gray-50 relative ${!notification.read ? 'bg-[#fff9f6]' : ''}`}
-                >
-                  {!notification.read && (
-                    <span className="absolute top-4 sm:top-5 right-4 sm:right-5 h-2.5 w-2.5 bg-[#ff4e00] rounded-full"></span>
-                  )}
-                  <div className="flex-shrink-0">
-                    {getCategoryIcon(notification.category || 'info')}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-sm leading-relaxed ${notification.read ? 'text-gray-600' : 'text-gray-900 font-medium'}`}>
-                      {notification.message}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
-                      <span className={`inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(notification.category || 'info')}`}>
-                        {(notification.category ? notification.category.charAt(0).toUpperCase() + notification.category.slice(1) : 'Info')}
-                      </span>
-                      <p className="text-xs text-gray-400">
-                        {notification.time}
-                      </p>
+              {filteredNotifications.map((notification: Notification) => {
+                const taskId = extractTaskId(notification.message);
+                const isClickable = taskId !== null;
+                
+                return (
+                  <div
+                    key={notification.id}
+                    className={`flex items-start gap-3 sm:gap-4 p-4 sm:p-5 transition-colors duration-200 hover:bg-gray-50 relative ${!notification.read ? 'bg-[#fff9f6]' : ''} ${isClickable ? 'cursor-pointer hover:bg-orange-50 border-l-4 border-l-transparent hover:border-l-[#ff4e00]' : ''}`}
+                    onClick={() => {
+                      if (isClickable) {
+                        console.log('Clicking notification with task ID:', taskId);
+                        handleNotificationClick(notification);
+                      }
+                    }}
+                  >
+                    {!notification.read && (
+                      <span className="absolute top-4 sm:top-5 right-4 sm:right-5 h-2.5 w-2.5 bg-[#ff4e00] rounded-full"></span>
+                    )}
+                    <div className="flex-shrink-0">
+                      {getCategoryIcon(notification.category || 'info')}
                     </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm leading-relaxed ${notification.read ? 'text-gray-600' : 'text-gray-900 font-medium'} ${isClickable ? 'hover:text-[#ff4e00]' : ''}`}>
+                        {notification.message}
+                        {isClickable && (
+                          <span className="ml-2 text-xs text-[#ff4e00] font-medium">
+                            (Click to view task)
+                          </span>
+                        )}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
+                        <span className={`inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(notification.category || 'info')}`}>
+                          {(notification.category ? notification.category.charAt(0).toUpperCase() + notification.category.slice(1) : 'Info')}
+                        </span>
+                        <p className="text-xs text-gray-400">
+                          {notification.time}
+                        </p>
+                        {isClickable && (
+                          <span className="text-xs text-[#ff4e00] font-medium">
+                            Task ID: {taskId}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {!notification.read && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAsRead(notification.id);
+                        }}
+                        className="ml-2 p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+                        title="Mark as read"
+                      >
+                        <BiCheck size={20} />
+                      </button>
+                    )}
                   </div>
-                  {!notification.read && (
-                    <button
-                      onClick={() => markAsRead(notification.id)}
-                      className="ml-2 p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
-                      title="Mark as read"
-                    >
-                      <BiCheck size={20} />
-                    </button>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-12 sm:py-16">

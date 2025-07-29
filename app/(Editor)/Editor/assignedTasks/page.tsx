@@ -110,7 +110,6 @@ export default function AssignedTasksPage() {
     return task.status.toLowerCase() === filter.toLowerCase();
   });
 
-  // Loading Skeleton Components
   const StatSkeleton = () => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-pulse">
       <div className="flex items-center gap-4">
@@ -189,7 +188,6 @@ export default function AssignedTasksPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -284,7 +282,6 @@ export default function AssignedTasksPage() {
           </div>
         </div>
 
-        {/* Tasks Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTasks.map((task) => (
             <div
@@ -370,7 +367,6 @@ export default function AssignedTasksPage() {
           </div>
         )}
 
-        {/* Status Update Modal */}
         {showStatusModal && selectedTask && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md">

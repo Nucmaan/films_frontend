@@ -19,7 +19,7 @@ import {
   FiImage,
 } from "react-icons/fi";
  import userAuth from "@/myStore/userAuth";
-import { useProject, useProjectTasks, useProjectUsers } from '@/lib/itsMe/page.js';
+import { useProject, useProjectTasks, useProjectUsers } from '@/lib/itsMe/page.js';  
 
 
  const getStatusColor = (status: string) => {
@@ -716,11 +716,13 @@ export default function ProjectDetail({ params }: { params: any }) {
                                   onClick={() => {
                                     if (confirm("Are you sure you want to delete this task?")) {
                                       setDeletingTaskId(task.id);
-                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`)
+                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`,{
+                                        params: { page }
+                                      })
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
-                                            mutateTasks(); // Re-fetch tasks
+                                            mutateTasks(); 
                                           }
                                         })
                                         .catch(error => {
@@ -843,11 +845,13 @@ export default function ProjectDetail({ params }: { params: any }) {
                                   onClick={() => {
                                     if (confirm("Are you sure you want to delete this task?")) {
                                       setDeletingTaskId(task.id);
-                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`)
+                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`,{
+                                        params: { page }
+                                      })
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
-                                            mutateTasks(); // Re-fetch tasks
+                                            mutateTasks();  
                                           }
                                         })
                                         .catch(error => {
@@ -970,7 +974,9 @@ export default function ProjectDetail({ params }: { params: any }) {
                                   onClick={() => {
                                     if (confirm("Are you sure you want to delete this task?")) {
                                       setDeletingTaskId(task.id);
-                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`)
+                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`,{
+                                        params: { page }
+                                      })
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
@@ -1097,7 +1103,9 @@ export default function ProjectDetail({ params }: { params: any }) {
                                   onClick={() => {
                                     if (confirm("Are you sure you want to delete this task?")) {
                                       setDeletingTaskId(task.id);
-                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`)
+                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`,{
+                                        params: { page }
+                                      })
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");

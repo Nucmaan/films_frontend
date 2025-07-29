@@ -39,9 +39,9 @@ const Project = {
     );
   },
   
-  deleteProject: async (projectId) => {
+  deleteProject: async (projectId,page) => {
     return await axios.delete(
-      `${projectService}/api/project/projectDelete/${projectId}`
+      `${projectService}/api/project/projectDelete/${projectId}?page=${page}`
     );
   }
 };

@@ -7,8 +7,7 @@ const userServiceUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
 const projectService = process.env.NEXT_PUBLIC_PROJECT_SERVICE_URL;
 const taskService = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
 
-// SWR Hooks with proper caching (like Authentication.js)
-export const useUserDashboard = () => {
+ export const useUserDashboard = () => {
   const { data, error, isLoading, mutate } = useSWR(
     `${userServiceUrl}/api/auth/dashboard`,
     swrFetcher,

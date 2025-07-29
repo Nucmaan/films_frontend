@@ -716,7 +716,9 @@ export default function ProjectDetail({ params }: { params: any }) {
                                   onClick={() => {
                                     if (confirm("Are you sure you want to delete this task?")) {
                                       setDeletingTaskId(task.id);
-                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`)
+                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`,{
+                                        params: { page }
+                                      })
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
@@ -843,7 +845,9 @@ export default function ProjectDetail({ params }: { params: any }) {
                                   onClick={() => {
                                     if (confirm("Are you sure you want to delete this task?")) {
                                       setDeletingTaskId(task.id);
-                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`)
+                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`,{
+                                        params: { page }
+                                      })
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
@@ -970,7 +974,9 @@ export default function ProjectDetail({ params }: { params: any }) {
                                   onClick={() => {
                                     if (confirm("Are you sure you want to delete this task?")) {
                                       setDeletingTaskId(task.id);
-                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`)
+                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`,{
+                                        params: { page }
+                                      })
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");
@@ -1097,7 +1103,9 @@ export default function ProjectDetail({ params }: { params: any }) {
                                   onClick={() => {
                                     if (confirm("Are you sure you want to delete this task?")) {
                                       setDeletingTaskId(task.id);
-                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`)
+                                      axios.delete(`${taskService}/api/task/deleteSingleTask/${task.id}`,{
+                                        params: { page }
+                                      })
                                         .then(response => {
                                           if (response.status === 200) {
                                             toast.success("Task deleted successfully");

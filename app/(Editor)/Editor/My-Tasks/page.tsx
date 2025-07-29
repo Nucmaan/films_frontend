@@ -4,7 +4,7 @@ import userAuth from '@/myStore/userAuth';
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { FiCheckCircle, FiCalendar, FiClock, FiAlertCircle } from 'react-icons/fi';
-import { useUserCompletedTasks } from "@/lib/allInOne/page.js";
+import { useUserCompletedTasks } from "@/lib/allInOne/page.js"; 
 
 interface TaskAssignment {
   file_url: string[];
@@ -22,7 +22,7 @@ interface TaskAssignment {
   createdAt: string;
   updatedAt: string;
 }
-
+ 
 export default function MyTasksPage() {
   const user = userAuth((state) => state.user);
   const taskUrl = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;

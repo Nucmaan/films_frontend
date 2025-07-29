@@ -365,7 +365,7 @@ export default function ProjectsPage() {
   const handleDeleteProject = async (projectId: number) => {
     try {
       setIsDeleting(true);
-      const response = await Project.deleteProject(projectId);
+      const response = await Project.deleteProject(projectId,page);
       
       if (response.data.success) {
         toast.success("Project deleted successfully");

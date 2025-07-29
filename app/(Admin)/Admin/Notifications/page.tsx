@@ -37,7 +37,8 @@ export default function NotificationsPage() {
   };
 
   const getTaskId = (message: string) => {
-    const match = message.match(/Task ID:\s*(\d+)/i);
+    
+    const match = message.match(/(\d+)\)\s*$/);
     return match ? match[1] : null;
   };
 
@@ -59,7 +60,7 @@ export default function NotificationsPage() {
             Notifications
           </h1>
           <p className="text-sm text-gray-500">
-          Stay updated with all your important alerts and messages
+            Stay updated with all your important alerts and messages
           </p>
         </div>
 
@@ -110,7 +111,7 @@ export default function NotificationsPage() {
                     {n.taskId ? (
                       <Link
                         href={`/Admin/Projects/SubTasks/${n.taskId}`}
-                        className="text-sm leading-relaxed text-blue-600 hover:underline"
+                        className="text-sm leading-relaxed text-blue-600 hover:text-blue-800 hover:underline transition-colors"
                       >
                         {n.message}
                       </Link>
@@ -122,6 +123,12 @@ export default function NotificationsPage() {
 
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
                       <p className="text-xs text-gray-400">{n.time}</p>
+                      {n.taskId && (
+                        <Link
+                          href={`/Admin/Projects/SubTasks/${n.taskId}`}
+                          className="text-xs   px-2 py-1 rounded-full"
+                        ></Link>
+                      )}
                     </div>
                   </div>
                 </div>

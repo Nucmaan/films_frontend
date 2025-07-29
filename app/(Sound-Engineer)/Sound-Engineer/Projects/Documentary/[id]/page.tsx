@@ -31,7 +31,7 @@ export default function EditProjectPage() {
   const formRef = useRef<HTMLFormElement>(null);
 
   // Use SWR hook to get Documentary projects
-  const { projects: documentaryProjects } = useDocumentaryProjects();
+  const { projects: documentaryProjects, mutate: refreshProjects } = useDocumentaryProjects();
 
   // Fetch the project data
   const fetchProject = async () => {
@@ -207,6 +207,8 @@ export default function EditProjectPage() {
       
       if (response.data.success) {
         toast.success("Project updated successfully");
+        // Refresh the SWR cache to reflect the changes
+        refreshProjects();
         router.push('/Sound-Engineer/Projects/Documentary');
       } else {
         toast.error(response.data.message || "Failed to update project");

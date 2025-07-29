@@ -31,7 +31,7 @@ export default function EditProjectPage() {
   const formRef = useRef<HTMLFormElement>(null);
 
   // Use SWR hook to get DRAMA projects
-  const { projects: dramaProjects } = useDramaProjects();
+  const { projects: dramaProjects, mutate: refreshProjects } = useDramaProjects();
 
   // Fetch the project data
   const fetchProject = async () => {
@@ -207,6 +207,8 @@ export default function EditProjectPage() {
       
       if (response.data.success) {
         toast.success("Project updated successfully");
+        // Refresh the SWR cache to reflect the changes
+        refreshProjects();
         router.push('/Supervisor/Projects/DRAMA');
       } else {
         toast.error(response.data.message || "Failed to update project");
