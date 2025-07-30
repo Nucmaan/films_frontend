@@ -38,7 +38,7 @@ export default function NotificationsPage() {
 
   const getTaskId = (message: string) => {
     
-    const match = message.match(/(\d+)\)\s*$/);
+    const match = message.match(/(\d+)\)?\s*$/);
     return match ? match[1] : null;
   };
 

@@ -53,7 +53,7 @@ export default function ReportsAnalyticsPage() {
   const [selectedRole, setSelectedRole] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState(() => getMonthString(new Date()));
 
-  // Build API URL with month param
+  
   const apiUrl = `${API_BASE}/api/subtasks/stats/users-completed?month=${selectedMonth}`;
   const { data, error, isLoading } = useSWR(apiUrl, fetcher);
 
