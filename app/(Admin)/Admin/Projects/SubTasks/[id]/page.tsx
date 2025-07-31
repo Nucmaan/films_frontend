@@ -137,10 +137,8 @@ export default function Page() {
       }
 
       const data = await res.json();
-      console.log("Subtask created successfully:", data);
-      setIsAddModalOpen(false);
-      console.log("Modal closed");
-      setNewSubtask({
+       setIsAddModalOpen(false);
+       setNewSubtask({
         status: "To Do",
         priority: "Medium",
         estimated_hours: 0,
@@ -149,8 +147,7 @@ export default function Page() {
       setSelectedRole("");
       setExpandedRoles(new Set());
       await mutate(undefined, true); // Force revalidation from server
-      console.log("SWR mutate called and list refreshed");
-    } catch (error) {
+     } catch (error) {
       console.error("Error creating subtask:", error);
       // Optionally show an error notification to the user
     } finally {
@@ -249,8 +246,7 @@ export default function Page() {
           throw new Error(errorData.message || "Failed to delete subtask");
         }
 
-        console.log("Subtask deleted successfully");
-        mutate(); // Refresh the list after deletion
+         mutate(); // Refresh the list after deletion
       } catch (error) {
         console.error("Error deleting subtask:", error);
         // Optionally show an error notification to the user

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import useSWR from "swr";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -22,6 +23,7 @@ import {
   TableFooter,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { 
   Clock, 
   CheckCircle2, 
@@ -39,14 +41,15 @@ import {
 const API_BASE = process.env.NEXT_PUBLIC_TASK_SERVICE_URL;
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+const getMonthString = (date: Date) => format(date, "yyyy-MM");
+
 export default function ReportsAnalyticsDetails() {
   const params = useParams();
   const empId = params?.id as string;  
+  const [selectedMonth, setSelectedMonth] = useState(() => getMonthString(new Date()));
 
-  const { data, error, isLoading } = useSWR(
-    empId ? `${API_BASE}/api/subtasks/completed/${empId}` : null,
-    fetcher
-  );
+  const apiUrl = empId ? `${API_BASE}/api/subtasks/completed/${empId}?month=${selectedMonth}` : null;
+  const { data, error, isLoading } = useSWR(apiUrl, fetcher);
 
 
 
@@ -103,7 +106,15 @@ export default function ReportsAnalyticsDetails() {
                 <p className="text-sm text-gray-500 mt-1">Detailed task activity and performance metrics</p>
               </div>
             </div>
-            <div className="hidden md:block">
+            <div className="hidden md:flex items-center gap-3">
+              <Input
+                type="month"
+                value={selectedMonth}
+                onChange={e => setSelectedMonth(e.target.value)}
+                className="w-[160px] bg-transparent border-gray-200 rounded-xl h-12 text-base focus:ring-2 focus:ring-blue-500/20 transition-all"
+                min="2020-01"
+                max={getMonthString(new Date())}
+              />
               <Badge variant="outline" className="px-4 py-2 bg-blue-50 border-blue-100 text-blue-700 rounded-full text-sm font-medium">
                 Last updated: {format(new Date(), 'MMM dd, yyyy')}
               </Badge>
@@ -341,8 +352,7 @@ export default function ReportsAnalyticsDetails() {
                      </TableHeader>
                     <TableBody>
                       {subtasks.map((task: any, index: number) => {
-                        // Determine status badge style
-                        let statusBadge;
+                         let statusBadge;
                         switch (task.status) {
                           case "To Do":
                             statusBadge = <Badge variant="outline" className="px-2.5 py-1 bg-gray-50 border-gray-200 text-gray-700 font-medium rounded-full">To Do</Badge>;
@@ -427,8 +437,7 @@ export default function ReportsAnalyticsDetails() {
                        <TableRow>
                          <TableCell colSpan={6} className="font-semibold text-gray-700">Total</TableCell>
                          <TableCell className="font-semibold text-gray-700">{totalHours.toFixed(2)} hrs</TableCell>
-                         <TableCell className="font-semibold text-gray-700">${totalCommission.toFixed(2)}</TableCell>
-                       </TableRow>
+                        </TableRow>
                      </TableFooter>
                   </Table>
                 </div>

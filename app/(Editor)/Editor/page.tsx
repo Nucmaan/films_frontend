@@ -27,9 +27,7 @@ export default function TranslatorPage() {
   // Filter recent tasks (limit to 10 most recent)
   const recentTasks = assignments ? assignments.slice(0, 10) : [];
   
-  // Debug: log the data to see the structure
-  console.log('Assignments data:', assignments);
-  console.log('Recent tasks:', recentTasks);
+  
 
   const getStatusColor = (status: string) => {
     switch (status) {

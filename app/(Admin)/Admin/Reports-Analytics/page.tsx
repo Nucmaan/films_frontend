@@ -91,10 +91,10 @@ export default function ReportsAnalyticsPage() {
     0
   );
   const totalCommission = filteredRows.reduce(
-    (sum, u) => sum + u.total_estimated_hours * 5,
+    (sum, u) => sum + u.commission,
     0
   );
-  const averageRate = totalUsers > 0 ? totalCommission / totalHours : 0;
+  const averageRate = totalHours > 0 ? totalCommission / totalHours : 0;
 
   const uniqueRoles = [...new Set(rows.map((u) => u.assignedTo_role))];
 
@@ -102,7 +102,7 @@ export default function ReportsAnalyticsPage() {
     const headers = [
       "Emp ID",
       "Name",
-      "Exp Level",
+      "Current Experience Level",
       "Role",
       "Actual Hours",
       "Completed Count",
@@ -112,11 +112,11 @@ export default function ReportsAnalyticsPage() {
     const csvData = filteredRows.map((user, index) => [
       user.assignedTo_empId,
       user.assignedTo_name,
-      user.assignedTo_expLevel,
+      user.current_exp_level,
       user.assignedTo_role,
       Number(user.total_estimated_hours).toFixed(2),
       user.completed_count,
-      (user.total_estimated_hours * 5).toFixed(2),
+      user.commission.toFixed(2),
     ]);
 
     csvData.push([
@@ -392,7 +392,7 @@ export default function ReportsAnalyticsPage() {
                           Name
                         </TableHead>
                         <TableHead className="font-semibold text-gray-600">
-                          Exp Level
+                          Current Experience Level
                         </TableHead>
                         <TableHead className="font-semibold text-gray-600">
                           Role
@@ -413,9 +413,6 @@ export default function ReportsAnalyticsPage() {
                     </TableHeader>
                     <TableBody>
                       {filteredRows.map((user, index) => {
-                        const commission = (
-                          user.total_estimated_hours * 5
-                        ).toFixed(2);
                         return (
                           <TableRow
                             key={user.assignedTo_empId}
@@ -425,13 +422,13 @@ export default function ReportsAnalyticsPage() {
                               {user.assignedTo_empId}
                             </TableCell>
                             <TableCell>{user.assignedTo_name}</TableCell>
-                            <TableCell>{user.assignedTo_expLevel}</TableCell>
+                            <TableCell>{user.current_exp_level}</TableCell>
                             <TableCell>{user.assignedTo_role}</TableCell>
                             <TableCell>
                               {Number(user.total_estimated_hours).toFixed(2)}
                             </TableCell>
                             <TableCell>{user.completed_count}</TableCell>
-                            <TableCell>US$ {commission}</TableCell>
+                            <TableCell>US$ {user.commission.toFixed(2)}</TableCell>
                             <TableCell className="text-right">
                               <Link
                                 href={`/Admin/Reports-Analytics/${user.assignedTo_empId}`}
@@ -467,7 +464,7 @@ export default function ReportsAnalyticsPage() {
             <CardFooter className="bg-gray-50 py-3 px-6 text-xs text-gray-500">
               <div className="flex items-center gap-2">
                 <DollarSign className="h-3.5 w-3.5" />
-                <span>Commission calculated at $5.00 per hour worked</span>
+                <span>Commission calculated based on backend rates</span>
               </div>
             </CardFooter>
           </Card>

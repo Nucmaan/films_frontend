@@ -36,15 +36,13 @@ export default function EditProjectPage() {
   // Fetch the project data
   const fetchProject = async () => {
     try {
-      console.log('Fetching project with ID:', id);
+     
       
       const response = await axios.get(`${process.env.NEXT_PUBLIC_PROJECT_SERVICE_URL}/api/project/singleProject/${id}`);
-      console.log('Project API response:', response);
-      
+       
       if (response.status === 200 && response.data.success) {
         const projectData = response.data.project;
-        console.log('Project data successfully loaded:', projectData);
-        
+         
         // Verify this is a Movie project
         if (projectData.project_type !== "Documentary") {
           toast.error("This project is not a Documentary project");
@@ -52,22 +50,11 @@ export default function EditProjectPage() {
           return;
         }
         
-        // Debug date formats
-        if (projectData.deadline) {
-          console.log('Original deadline:', projectData.deadline);
-          console.log('Parsed as Date object:', new Date(projectData.deadline));
-          console.log('ISO string format:', new Date(projectData.deadline).toISOString());
-          console.log('ISO date only:', new Date(projectData.deadline).toISOString().split('T')[0]);
-          console.log('Locale string:', new Date(projectData.deadline).toLocaleString());
-        }
-        
+    
         setProject(projectData);
         
-        // Debug the project channel
-        console.log('Project channel from API:', projectData.channel);
-        
-        // Set preview image if project has one
-        if (projectData.project_image) {
+          
+         if (projectData.project_image) {
           setPreviewImage(projectData.project_image);
         }
       } else {
@@ -171,8 +158,7 @@ export default function EditProjectPage() {
       const progress = (form.elements.namedItem('progress') as HTMLInputElement).value;
       const description = (form.elements.namedItem('description') as HTMLTextAreaElement).value;
       
-      console.log('Raw deadline input:', deadlineInput);
-      
+       
       // Append all form data
       formData.append('id', project.id);
       formData.append('name', name);
@@ -188,11 +174,7 @@ export default function EditProjectPage() {
         formData.append('project_image', selectedFile);
       }
       
-      console.log('Form data being sent:');
-      for (const pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
-      
+     
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_PROJECT_SERVICE_URL}/api/project/updateProject/${project.id}`,
         formData,
@@ -203,8 +185,7 @@ export default function EditProjectPage() {
         }
       );
       
-      console.log('Update response:', response);
-      
+       
       if (response.data.success) {
         toast.success("Project updated successfully");
         // Refresh the SWR cache to reflect the changes
